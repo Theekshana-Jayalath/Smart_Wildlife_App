@@ -1,0 +1,23 @@
+[
+  {
+    "id": "A001",
+    "name": "Elephant - Raja",
+    "type": "Elephant",
+    "coordinates": [
+      { "lat": 7.8731, "lng": 80.7718, "timestamp": "2026-10-06T08:00:00Z" },
+      { "lat": 7.8740, "lng": 80.7725, "timestamp": "2026-10-06T08:05:00Z" },
+      { "lat": 7.8755, "lng": 80.7730, "timestamp": "2026-10-06T08:10:00Z" }
+    ],
+    "inHighRiskZone": false
+  },
+  {
+    "id": "A002",
+    "name": "Leopard - Kalu",
+    "type": "Leopard",
+    "coordinates": [
+      { "lat": 7.8800, "lng": 80.7800, "timestamp": "2026-10-06T08:00:00Z" },
+      { "lat": 7.8810, "lng": 80.7815, "timestamp": "2026-10-06T08:05:00Z" }
+    ],
+    "inHighRiskZone": true
+  }
+]
