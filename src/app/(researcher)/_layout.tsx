@@ -1,14 +1,15 @@
 import { Tabs, router } from 'expo-router';
 import { TouchableOpacity, Text, Alert } from 'react-native';
-import { supabase } from '../../services/supabase';
+import { auth } from '../../services/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function TabLayout() {
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
+    try {
+      await signOut(auth);
       router.replace('/');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
     }
   };
 

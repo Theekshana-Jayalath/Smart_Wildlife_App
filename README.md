@@ -4,7 +4,7 @@ Welcome to the **Smart Wildlife App**! This is the official mobile application f
 
 ## 🛠 Tech Stack
 * **Frontend:** React Native with Expo (Expo Router)
-* **Backend:** Supabase (PostgreSQL, Auth, Storage)
+* **Backend:** Google Firebase (Firestore, Auth, Storage)
 * **Maps & Location:** `react-native-maps`, `expo-location`
 
 ---
@@ -27,15 +27,15 @@ npm install
 ```
 
 ### 3. Setup Environment Variables (Crucial!)
-You need to connect your local app to our Supabase database.
+You need to connect your local app to our Firebase database.
 1. Create a new file named `.env` in the root folder (same place as `package.json`).
 2. Open `.env.example` and copy its contents.
-3. Paste them into your new `.env` file and replace the placeholder text with the actual Supabase URL and ANON KEY (Ask the Team Leader for these keys!).
+3. Paste them into your new `.env` file and replace the placeholder text with the actual Firebase config keys (Ask the team for these keys!).
 
 ### 4. Run the App
-Start the Expo development server:
+Start the Expo development server (use `-c` to clear cache for the first time):
 ```bash
-npx expo start
+npx expo start -c
 ```
 * Download the **Expo Go** app on your phone.
 * Scan the QR code shown in the terminal to view the app live!
@@ -61,7 +61,7 @@ src/
 │   └── (researcher)/          # Researcher's Bottom Tabs
 │       └── reports.tsx        # Use Case 4: Reports
 ├── components/                # Reusable UI (Buttons, Cards, Modals)
-├── services/                  # Database connections (Supabase logic)
+├── services/                  # Database connections (Firebase logic)
 ├── hooks/                     # Custom React Hooks
 ├── constants/                 # Colors, Themes, Configs
 └── utils/                     # Helper functions & dummyData.json
@@ -71,6 +71,6 @@ src/
 * **Do not edit `app/index.tsx` (Login)** unless discussed. It handles role-based routing.
 * Work **only inside your assigned files** to avoid merge conflicts.
 * If you create a reusable button or map, put it in `src/components/`.
-* Write all database queries (Supabase calls) inside `src/services/`.
+* Write all database queries (Firestore calls) inside `src/services/`.
 
 Happy Coding! 🚀

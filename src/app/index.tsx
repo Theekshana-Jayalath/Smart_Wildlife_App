@@ -1,49 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { supabase } from '../services/supabase';
+import { auth, db } from '../services/firebase';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(true); // Start loading immediately
+  const [loading, setLoading] = useState(true);
 
   // Auto-login check when app opens
   useEffect(() => {
-    checkSession();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await redirectUserBasedOnRole(user.uid);
+      } else {
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await redirectUserBasedOnRole(session.user.id);
-    } else {
-      setLoading(false); // No session, stop loading and show login form
-    }
-  }
-
   async function redirectUserBasedOnRole(userId: string) {
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
+    try {
+      const docRef = doc(db, 'user_roles', userId);
+      const docSnap = await getDoc(docRef);
 
-    if (roleError || !roleData) {
-      Alert.alert('Role Error', 'Could not find your role. Please contact Admin.');
-      setLoading(false);
-      return;
-    }
-
-    const userRole = roleData.role;
-    if (userRole === 'ranger') {
-      router.replace('/(ranger)/patrol');
-    } else if (userRole === 'manager') {
-      router.replace('/(manager)/assign');
-    } else if (userRole === 'researcher') {
-      router.replace('/(researcher)/reports');
-    } else {
-      Alert.alert('Error', 'Unknown role.');
+      if (docSnap.exists()) {
+        const userRole = docSnap.data().role;
+        if (userRole === 'ranger') {
+          router.replace('/(ranger)/patrol');
+        } else if (userRole === 'manager') {
+          router.replace('/(manager)/assign');
+        } else if (userRole === 'researcher') {
+          router.replace('/(researcher)/reports');
+        } else {
+          Alert.alert('Error', 'Unknown role.');
+          setLoading(false);
+        }
+      } else {
+        Alert.alert('Role Error', 'Could not find your role. Contact Admin.');
+        setLoading(false);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
       setLoading(false);
     }
   }
@@ -56,24 +57,19 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (authError) {
-      Alert.alert('Login Failed', authError.message);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await redirectUserBasedOnRole(userCredential.user.uid);
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message);
       setLoading(false);
-      return;
     }
-
-    await redirectUserBasedOnRole(authData.user.id);
   }
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#2e7d32" />
+        <ActivityIndicator size="large" color="#f57c00" />
         <Text style={{ textAlign: 'center', marginTop: 10 }}>Checking login status...</Text>
       </View>
     );
@@ -112,8 +108,8 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#f5f5f5' },
-  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 40, textAlign: 'center', color: '#2e7d32' },
+  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 40, textAlign: 'center', color: '#f57c00' }, // Firebase orange
   input: { backgroundColor: 'white', padding: 15, borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: '#ddd', fontSize: 16 },
-  button: { backgroundColor: '#2e7d32', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  button: { backgroundColor: '#f57c00', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 18 }
 });
