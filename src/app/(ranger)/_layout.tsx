@@ -1,39 +1,30 @@
 import { Tabs, router } from 'expo-router';
-import { TouchableOpacity, Text, Alert } from 'react-native';
-import { auth } from '../../services/firebase';
-import { signOut } from 'firebase/auth';
+import { TouchableOpacity, Text } from 'react-native';
 import { AppTheme } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function TabLayout() {
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.replace('/');
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    }
-  };
+  const { isDarkMode, theme } = useTheme();
 
   return (
     <Tabs 
       screenOptions={{
-        headerStyle: { backgroundColor: AppTheme.colors.header },
-        headerTintColor: AppTheme.colors.background,
-        tabBarStyle: { backgroundColor: AppTheme.colors.background },
-        tabBarActiveTintColor: AppTheme.colors.primary,
-        tabBarInactiveTintColor: AppTheme.colors.textSecondary,
-        headerRight: () => (
-          <TouchableOpacity onPress={handleLogout} style={{ marginRight: AppTheme.spacing.md }}>
-            <Text style={{ color: AppTheme.colors.danger, fontWeight: AppTheme.fontWeights.bold }}>Logout</Text>
-          </TouchableOpacity>
-        )
+        headerStyle: { backgroundColor: isDarkMode ? theme.header : AppTheme.colors.header },
+        headerTintColor: isDarkMode ? '#F8FAFC' : AppTheme.colors.background,
+        tabBarStyle: { 
+          backgroundColor: isDarkMode ? '#0B132B' : AppTheme.colors.background,
+          borderTopColor: isDarkMode ? '#1C2541' : '#E2E8F0',
+        },
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
       }}
     >
       <Tabs.Screen 
         name="index" 
         options={{ 
-          title: 'Dashboard',
+          title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />
         }} 
       />
@@ -52,6 +43,13 @@ export default function TabLayout() {
         }} 
       />
       <Tabs.Screen 
+        name="profile" 
+        options={{ 
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />
+        }} 
+      />
+      <Tabs.Screen 
         name="incident" 
         options={{ 
           title: 'Report Incident',
@@ -61,6 +59,26 @@ export default function TabLayout() {
               <Ionicons name="arrow-back" size={24} color={AppTheme.colors.background} />
             </TouchableOpacity>
           )
+        }} 
+      />
+      <Tabs.Screen 
+        name="review" 
+        options={{ 
+          title: 'Review Incident',
+          href: null, 
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: AppTheme.spacing.md }}>
+              <Ionicons name="arrow-back" size={24} color={AppTheme.colors.background} />
+            </TouchableOpacity>
+          )
+        }} 
+      />
+      <Tabs.Screen 
+        name="success" 
+        options={{ 
+          title: 'Success',
+          href: null,
+          headerShown: false,
         }} 
       />
     </Tabs>
