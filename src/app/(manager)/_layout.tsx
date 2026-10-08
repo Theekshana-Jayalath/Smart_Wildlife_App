@@ -1,9 +1,9 @@
-import { Tabs, router } from 'expo-router';
-import { TouchableOpacity, Text, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '../../services/firebase';
+import { Tabs, router } from 'expo-router';
 import { signOut } from 'firebase/auth';
+import { Alert, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { auth } from '../../services/firebase';
 
 export default function TabLayout() {
   const { theme } = useTheme();
