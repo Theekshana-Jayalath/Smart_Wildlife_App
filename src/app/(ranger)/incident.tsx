@@ -39,14 +39,17 @@ export default function ReportIncidentScreen() {
   const handleContinue = () => {
     if (!isValid) return;
     
-    // Not actually submitting to Firebase yet per instructions.
-    Alert.alert(
-      "Review Incident", 
-      "Data is valid. Ready to review and submit.",
-      [
-        { text: "OK", onPress: () => router.back() }
-      ]
-    );
+    // Pass state down to the review screen
+    router.push({
+      pathname: '/(ranger)/review',
+      params: {
+        type: type,
+        description: description,
+        photoUri: photoUri || '', // pass empty string if null to satisfy string serialization
+        latitude: location!.latitude,
+        longitude: location!.longitude,
+      }
+    });
   };
 
   return (
