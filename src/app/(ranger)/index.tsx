@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
 import { auth } from '../../services/firebase';
 import { useTheme } from '../../context/ThemeContext';
+import { SyncService, SyncStatus } from '../../services/syncService';
 
 const bannerImage = require('../../assets/banner.jpg');
 
@@ -13,6 +14,18 @@ export default function RangerDashboard() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('Ranger');
   const { isDarkMode, toggleTheme, theme } = useTheme();
+
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('IDLE');
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    SyncService.init();
+    const unsubscribe = SyncService.subscribe((status, count) => {
+      setSyncStatus(status);
+      setPendingCount(count);
+    });
+    return unsubscribe;
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -91,6 +104,32 @@ export default function RangerDashboard() {
               <Text style={[styles.avatarLabel, { color: theme.textSecondary }]}>Ranger</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Sync Status Banner */}
+          {syncStatus !== 'IDLE' && (
+            <View style={[
+              styles.syncBanner, 
+              syncStatus === 'SUCCESS' ? styles.syncSuccess : styles.syncWarning,
+              isDarkMode && syncStatus !== 'SUCCESS' ? { backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#F59E0B' } : {},
+              isDarkMode && syncStatus === 'SUCCESS' ? { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10B981' } : {}
+            ]}>
+              <Ionicons 
+                name={syncStatus === 'SUCCESS' ? 'checkmark-circle' : syncStatus === 'SYNCING' ? 'sync' : 'warning'} 
+                size={20} 
+                color={syncStatus === 'SUCCESS' ? (isDarkMode ? '#10B981' : '#059669') : (isDarkMode ? '#F59E0B' : '#D97706')} 
+              />
+              <Text style={[
+                styles.syncText, 
+                { color: syncStatus === 'SUCCESS' ? (isDarkMode ? '#10B981' : '#059669') : (isDarkMode ? '#FCD34D' : '#92400E') }
+              ]}>
+                {syncStatus === 'SUCCESS' 
+                  ? 'All incidents synchronized successfully' 
+                  : syncStatus === 'SYNCING' 
+                    ? `Synchronizing ${pendingCount} incident(s)...`
+                    : `${pendingCount} incident(s) pending synchronization`}
+              </Text>
+            </View>
+          )}
 
           {/* Action Card */}
           <TouchableOpacity 
@@ -257,6 +296,28 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     fontWeight: '600',
+  },
+  syncBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  syncWarning: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  syncSuccess: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#A7F3D0',
+  },
+  syncText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 8,
+    flex: 1,
   },
   actionCard: {
     borderRadius: 14,

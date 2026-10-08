@@ -23,7 +23,7 @@ export default function IncidentReviewScreen() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await IncidentService.submitIncident({
+      const result = await IncidentService.submitIncident({
         type: type as string,
         description: description as string,
         photoUri: photoUri ? (photoUri as string) : null,
@@ -31,7 +31,10 @@ export default function IncidentReviewScreen() {
         longitude: Number(longitude),
       });
 
-      router.replace('/(ranger)/success');
+      router.replace({
+        pathname: '/(ranger)/success',
+        params: { status: result.status }
+      });
     } catch (error: any) {
       Alert.alert("Submission Failed", error.message);
     } finally {
