@@ -1,33 +1,49 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
 
 interface Props {
   photoUri: string | null;
+  loading?: boolean;
   onTake: () => void;
   onClear: () => void;
 }
 
-export const PhotoCaptureCard = ({ photoUri, onTake, onClear }: Props) => {
+export const PhotoCaptureCard = ({ photoUri, loading, onTake, onClear }: Props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Photo Evidence</Text>
       
       {photoUri ? (
         <View style={styles.photoContainer}>
-          <View style={styles.placeholderImage}>
-            <Ionicons name="image" size={48} color={AppTheme.colors.success} />
-            <Text style={styles.successText}>Photo Captured</Text>
+          <Image source={{ uri: photoUri }} style={styles.imagePreview} resizeMode="cover" />
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.clearBtn} onPress={onClear}>
+              <Ionicons name="trash-outline" size={20} color={AppTheme.colors.danger} />
+              <Text style={styles.clearBtnText}>Discard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.retakeBtn} onPress={onTake} disabled={loading}>
+              <Ionicons name="camera-outline" size={20} color={AppTheme.colors.primary} />
+              <Text style={styles.retakeBtnText}>Retake Photo</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.clearBtn} onPress={onClear}>
-            <Text style={styles.clearBtnText}>Retake Photo</Text>
-          </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.captureBtn} onPress={onTake} activeOpacity={0.8}>
-          <Ionicons name="camera-outline" size={32} color={AppTheme.colors.primary} />
-          <Text style={styles.captureText}>Take Photo</Text>
+        <TouchableOpacity 
+          style={styles.captureBtn} 
+          onPress={onTake} 
+          activeOpacity={0.8}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="large" color={AppTheme.colors.primary} />
+          ) : (
+            <>
+              <Ionicons name="camera-outline" size={32} color={AppTheme.colors.primary} />
+              <Text style={styles.captureText}>Take Photo</Text>
+            </>
+          )}
         </TouchableOpacity>
       )}
     </View>
@@ -54,6 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: AppTheme.spacing.sm,
+    minHeight: 120,
   },
   captureText: {
     ...AppTheme.typography.buttonText,
@@ -63,27 +80,41 @@ const styles = StyleSheet.create({
     backgroundColor: AppTheme.colors.background,
     borderRadius: AppTheme.borderRadius.md,
     borderWidth: 1,
-    borderColor: AppTheme.colors.success,
-    padding: AppTheme.spacing.md,
-    alignItems: 'center',
+    borderColor: '#E0E1E6',
+    overflow: 'hidden',
   },
-  placeholderImage: {
-    alignItems: 'center',
-    marginBottom: AppTheme.spacing.md,
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    backgroundColor: AppTheme.colors.selected,
   },
-  successText: {
-    ...AppTheme.typography.body,
-    color: AppTheme.colors.success,
-    marginTop: AppTheme.spacing.xs,
-    fontWeight: AppTheme.fontWeights.medium,
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: AppTheme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E1E6',
   },
   clearBtn: {
-    paddingVertical: AppTheme.spacing.xs,
-    paddingHorizontal: AppTheme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: AppTheme.spacing.sm,
+    gap: AppTheme.spacing.xs,
   },
   clearBtnText: {
     ...AppTheme.typography.bodySmall,
     color: AppTheme.colors.danger,
     fontWeight: AppTheme.fontWeights.semibold,
   },
+  retakeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: AppTheme.spacing.sm,
+    gap: AppTheme.spacing.xs,
+  },
+  retakeBtnText: {
+    ...AppTheme.typography.bodySmall,
+    color: AppTheme.colors.primary,
+    fontWeight: AppTheme.fontWeights.semibold,
+  }
 });

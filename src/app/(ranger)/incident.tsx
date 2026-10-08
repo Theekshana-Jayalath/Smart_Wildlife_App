@@ -7,6 +7,7 @@ import { IncidentTypeSelect } from '../../components/incident/IncidentTypeSelect
 import { PhotoCaptureCard } from '../../components/incident/PhotoCaptureCard';
 import { LocationCard } from '../../components/incident/LocationCard';
 import { Button } from '../../components/ui/Button';
+import { useCamera } from '../../hooks/useCamera';
 
 export default function ReportIncidentScreen() {
   const [type, setType] = useState<IncidentType | null>(null);
@@ -14,14 +15,16 @@ export default function ReportIncidentScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [locating, setLocating] = useState(false);
+  const { takePhoto, loading: cameraLoading } = useCamera();
 
   // Validation: description must not be empty, type must be selected
   const isValid = type !== null && description.trim().length > 0;
 
-  const handleTakePhoto = () => {
-    // TODO: Integrate actual camera logic
-    Alert.alert("Camera Integration", "Camera feature is structurally ready and will be integrated soon.");
-    setPhotoUri("mock_image_uri_for_now");
+  const handleTakePhoto = async () => {
+    const uri = await takePhoto();
+    if (uri) {
+      setPhotoUri(uri);
+    }
   };
 
   const handleGetLocation = () => {
@@ -87,6 +90,7 @@ export default function ReportIncidentScreen() {
         {/* 3. Photo Evidence */}
         <PhotoCaptureCard 
           photoUri={photoUri} 
+          loading={cameraLoading}
           onTake={handleTakePhoto} 
           onClear={() => setPhotoUri(null)} 
         />
