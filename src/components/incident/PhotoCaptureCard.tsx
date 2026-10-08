@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Props {
   photoUri: string | null;
@@ -11,37 +12,45 @@ interface Props {
 }
 
 export const PhotoCaptureCard = ({ photoUri, loading, onTake, onClear }: Props) => {
+  const { theme, isDarkMode } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Photo Evidence</Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>Photo Evidence</Text>
       
       {photoUri ? (
-        <View style={styles.photoContainer}>
+        <View style={[styles.photoContainer, { backgroundColor: theme.cardBg, borderColor: theme.inputBorder }]}>
           <Image source={{ uri: photoUri }} style={styles.imagePreview} resizeMode="cover" />
-          <View style={styles.actionRow}>
+          <View style={[styles.actionRow, { borderTopColor: theme.inputBorder }]}>
             <TouchableOpacity style={styles.clearBtn} onPress={onClear}>
               <Ionicons name="trash-outline" size={20} color={AppTheme.colors.danger} />
               <Text style={styles.clearBtnText}>Discard</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.retakeBtn} onPress={onTake} disabled={loading}>
-              <Ionicons name="camera-outline" size={20} color={AppTheme.colors.primary} />
-              <Text style={styles.retakeBtnText}>Retake Photo</Text>
+              <Ionicons name="camera-outline" size={20} color={theme.primary} />
+              <Text style={[styles.retakeBtnText, { color: theme.primary }]}>Retake Photo</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <TouchableOpacity 
-          style={styles.captureBtn} 
+          style={[
+            styles.captureBtn, 
+            { 
+              backgroundColor: isDarkMode ? '#1E293B' : AppTheme.colors.selected, 
+              borderColor: theme.primary 
+            }
+          ]} 
           onPress={onTake} 
           activeOpacity={0.8}
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator size="large" color={AppTheme.colors.primary} />
+            <ActivityIndicator size="large" color={theme.primary} />
           ) : (
             <>
-              <Ionicons name="camera-outline" size={32} color={AppTheme.colors.primary} />
-              <Text style={styles.captureText}>Take Photo</Text>
+              <Ionicons name="camera-outline" size={32} color={theme.primary} />
+              <Text style={[styles.captureText, { color: theme.primary }]}>Take Photo</Text>
             </>
           )}
         </TouchableOpacity>
@@ -56,14 +65,11 @@ const styles = StyleSheet.create({
   },
   label: {
     ...AppTheme.typography.h3,
-    color: AppTheme.colors.header,
     marginBottom: AppTheme.spacing.sm,
   },
   captureBtn: {
-    backgroundColor: AppTheme.colors.selected,
     borderRadius: AppTheme.borderRadius.md,
     borderWidth: 2,
-    borderColor: AppTheme.colors.primary,
     borderStyle: 'dashed',
     padding: AppTheme.spacing.xl,
     alignItems: 'center',
@@ -74,26 +80,22 @@ const styles = StyleSheet.create({
   },
   captureText: {
     ...AppTheme.typography.buttonText,
-    color: AppTheme.colors.primary,
   },
   photoContainer: {
-    backgroundColor: AppTheme.colors.background,
     borderRadius: AppTheme.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#E0E1E6',
     overflow: 'hidden',
   },
   imagePreview: {
     width: '100%',
     height: 200,
-    backgroundColor: AppTheme.colors.selected,
+    backgroundColor: '#000000',
   },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: AppTheme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#E0E1E6',
   },
   clearBtn: {
     flexDirection: 'row',
@@ -114,7 +116,6 @@ const styles = StyleSheet.create({
   },
   retakeBtnText: {
     ...AppTheme.typography.bodySmall,
-    color: AppTheme.colors.primary,
     fontWeight: AppTheme.fontWeights.semibold,
   }
 });

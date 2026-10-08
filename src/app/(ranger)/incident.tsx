@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, SafeAreaView, TextInput, Text, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { AppTheme } from '../../theme';
 import { IncidentType, LocationData } from '../../types/incident';
@@ -9,17 +10,19 @@ import { LocationCard } from '../../components/incident/LocationCard';
 import { Button } from '../../components/ui/Button';
 import { useCamera } from '../../hooks/useCamera';
 import { useDeviceLocation } from '../../hooks/useDeviceLocation';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ReportIncidentScreen() {
   const [type, setType] = useState<IncidentType | null>(null);
   const [description, setDescription] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
-  const [locating, setLocating] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const { theme, isDarkMode } = useTheme();
   const { takePhoto, loading: cameraLoading } = useCamera();
   const { fetchLocation, loading: locationLoading, error: locationError } = useDeviceLocation();
 
-  // Validation: description must not be empty, type must be selected, AND location is required
+  // Validation
   const isValid = type !== null && description.trim().length > 0 && location !== null;
 
   const handleTakePhoto = async () => {
@@ -37,15 +40,15 @@ export default function ReportIncidentScreen() {
   };
 
   const handleContinue = () => {
+    setTouched(true);
     if (!isValid) return;
     
-    // Pass state down to the review screen
     router.push({
       pathname: '/(ranger)/review',
       params: {
         type: type,
         description: description,
-        photoUri: photoUri || '', // pass empty string if null to satisfy string serialization
+        photoUri: photoUri || '',
         latitude: location!.latitude,
         longitude: location!.longitude,
       }
@@ -53,13 +56,14 @@ export default function ReportIncidentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <ScrollView 
         style={styles.container} 
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageDescription}>
+        <Text style={[styles.pageDescription, { color: theme.textSecondary }]}>
           Please provide accurate details. Your reports are critical for conservation efforts.
         </Text>
 
@@ -71,22 +75,31 @@ export default function ReportIncidentScreen() {
 
         {/* 2. Description */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Description <Text style={styles.required}>*</Text></Text>
+          <Text style={[styles.label, { color: theme.textPrimary }]}>
+            Description <Text style={styles.required}>*</Text>
+          </Text>
           <TextInput
             style={[
               styles.textArea,
-              description.trim().length === 0 && styles.textAreaInvalid
+              {
+                backgroundColor: theme.inputBg,
+                borderColor: touched && description.trim().length === 0 ? AppTheme.colors.danger : theme.inputBorder,
+                color: theme.inputText, // Clean solid dark text in Light mode, white text in Dark mode
+              }
             ]}
             placeholder="Describe what you observed..."
-            placeholderTextColor={AppTheme.colors.textSecondary}
+            placeholderTextColor={isDarkMode ? '#64748B' : '#90A4AE'}
             multiline
             numberOfLines={4}
             value={description}
-            onChangeText={setDescription}
+            onChangeText={(text) => {
+              setDescription(text);
+              if (!touched) setTouched(true);
+            }}
             textAlignVertical="top"
           />
-          {description.trim().length === 0 && (
-             <Text style={styles.errorText}>* Description is required</Text>
+          {touched && description.trim().length === 0 && (
+            <Text style={styles.errorText}>* Description is required</Text>
           )}
         </View>
 
@@ -123,7 +136,6 @@ export default function ReportIncidentScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F8FA', // Slightly distinct from pure white cards for depth
   },
   container: {
     flex: 1,
@@ -134,32 +146,28 @@ const styles = StyleSheet.create({
   },
   pageDescription: {
     ...AppTheme.typography.body,
-    color: AppTheme.colors.textSecondary,
     marginBottom: AppTheme.spacing.lg,
+    fontSize: 14,
+    lineHeight: 20,
   },
   inputContainer: {
     marginBottom: AppTheme.spacing.lg,
   },
   label: {
-    ...AppTheme.typography.h3,
-    color: AppTheme.colors.header,
+    fontSize: 16,
+    fontWeight: '700',
     marginBottom: AppTheme.spacing.sm,
   },
   required: {
     color: AppTheme.colors.danger,
   },
   textArea: {
-    backgroundColor: AppTheme.colors.background,
     borderRadius: AppTheme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: '#E0E1E6',
+    borderWidth: 1.5,
     padding: AppTheme.spacing.md,
-    minHeight: 120,
-    ...AppTheme.typography.body,
-    color: AppTheme.colors.header,
-  },
-  textAreaInvalid: {
-    borderColor: AppTheme.colors.danger,
+    minHeight: 110,
+    fontSize: 15,
+    lineHeight: 22,
   },
   errorText: {
     ...AppTheme.typography.caption,

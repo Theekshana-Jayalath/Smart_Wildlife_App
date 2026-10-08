@@ -1,29 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
 import { Button } from '../../components/ui/Button';
 import { INCIDENT_TYPES } from '../../constants/incidents';
+import { IncidentService } from '../../services/incidentService';
+import { useState } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function IncidentReviewScreen() {
   const params = useLocalSearchParams();
+  const { theme, isDarkMode } = useTheme();
   
   const { type, description, photoUri, latitude, longitude } = params;
 
   // Resolve the full incident object from the ID
   const incidentOption = INCIDENT_TYPES.find(t => t.id === type);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    // We do not upload to Firebase yet.
-    // Placeholder for submission logic.
-    Alert.alert(
-      "Report Submitted", 
-      "The incident report was submitted successfully. (Firebase upload not implemented yet).",
-      [
-        { text: "OK", onPress: () => router.replace('/(ranger)') }
-      ]
-    );
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await IncidentService.submitIncident({
+        type: type as string,
+        description: description as string,
+        photoUri: photoUri ? (photoUri as string) : null,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+      });
+
+      router.replace('/(ranger)/success');
+    } catch (error: any) {
+      Alert.alert("Submission Failed", error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEdit = () => {
@@ -32,45 +45,45 @@ export default function IncidentReviewScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         
-        <View style={styles.headerAlert}>
-          <Ionicons name="information-circle" size={24} color={AppTheme.colors.primary} />
-          <Text style={styles.headerAlertText}>
+        <View style={[styles.headerAlert, { backgroundColor: isDarkMode ? '#1E293B' : AppTheme.colors.selected }]}>
+          <Ionicons name="information-circle" size={24} color={theme.primary} />
+          <Text style={[styles.headerAlertText, { color: isDarkMode ? '#38BDF8' : AppTheme.colors.primary }]}>
             This is the information that will be submitted.
           </Text>
         </View>
 
         {/* Info Card */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Incident Type</Text>
+        <View style={[styles.card, { backgroundColor: theme.cardBg, borderColor: isDarkMode ? '#334155' : '#E0E1E6' }]}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Incident Type</Text>
           <View style={styles.row}>
             {incidentOption && (
-              <Ionicons name={incidentOption.icon as any} size={24} color={AppTheme.colors.primary} />
+              <Ionicons name={incidentOption.icon as any} size={24} color={theme.primary} />
             )}
-            <Text style={styles.valueText}>{incidentOption?.label || type}</Text>
+            <Text style={[styles.valueText, { color: theme.textPrimary }]}>{incidentOption?.label || type}</Text>
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDarkMode ? '#334155' : '#E0E1E6' }]} />
 
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.descriptionText}>{description}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Description</Text>
+          <Text style={[styles.descriptionText, { color: theme.inputText }]}>{description}</Text>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: isDarkMode ? '#334155' : '#E0E1E6' }]} />
 
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Location</Text>
           <View style={styles.row}>
             <Ionicons name="location" size={24} color={AppTheme.colors.success} />
-            <Text style={styles.valueText}>
+            <Text style={[styles.valueText, { color: theme.textPrimary }]}>
               Lat: {Number(latitude).toFixed(5)}, Lng: {Number(longitude).toFixed(5)}
             </Text>
           </View>
         </View>
 
         {/* Photo Evidence Card */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Photo Evidence</Text>
+        <View style={[styles.card, { backgroundColor: theme.cardBg, borderColor: isDarkMode ? '#334155' : '#E0E1E6' }]}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Photo Evidence</Text>
           {photoUri ? (
             <Image 
               source={{ uri: photoUri as string }} 
@@ -78,7 +91,7 @@ export default function IncidentReviewScreen() {
               resizeMode="cover" 
             />
           ) : (
-            <Text style={styles.noPhotoText}>No photo provided.</Text>
+            <Text style={[styles.noPhotoText, { color: theme.textSecondary }]}>No photo provided.</Text>
           )}
         </View>
 
@@ -92,7 +105,8 @@ export default function IncidentReviewScreen() {
           />
           <Button 
             title="Submit Report" 
-            onPress={handleSubmit} 
+            onPress={handleSubmit}
+            loading={isSubmitting} 
             style={styles.submitButton} 
           />
         </View>
