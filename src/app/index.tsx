@@ -30,7 +30,7 @@ export default function LoginScreen() {
       if (docSnap.exists()) {
         const userRole = docSnap.data().role;
         if (userRole === 'ranger') {
-          router.replace('/(ranger)/patrol');
+          router.replace('/(ranger)');
         } else if (userRole === 'manager') {
           router.replace('/(manager)/assign');
         } else if (userRole === 'researcher') {
