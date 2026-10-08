@@ -32,7 +32,7 @@ export default function LoginScreen() {
         if (userRole === 'ranger') {
           router.replace('/(ranger)');
         } else if (userRole === 'manager') {
-          router.replace('/(manager)/index' as Href);
+          router.replace('/(manager)' as Href);
         } else if (userRole === 'researcher') {
           router.replace('/(researcher)/reports');
         } else {
