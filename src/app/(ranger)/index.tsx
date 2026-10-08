@@ -1,51 +1,147 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
+import { auth } from '../../services/firebase';
+import { useTheme } from '../../context/ThemeContext';
+
+const bannerImage = require('../../assets/banner.jpg');
 
 export default function RangerDashboard() {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>('Ranger');
+  const { isDarkMode, toggleTheme, theme } = useTheme();
+
+  useFocusEffect(
+    useCallback(() => {
+      const user = auth.currentUser;
+      if (user) {
+        setPhotoUrl(user.photoURL);
+        setDisplayName(user.displayName || 'Ranger');
+      }
+    }, [])
+  );
+
   const handleReportIncident = () => {
     router.push('/(ranger)/incident');
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: isDarkMode ? theme.header : AppTheme.colors.header }]} edges={['top', 'left', 'right']}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
         
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Ranger Dashboard</Text>
-          <Text style={styles.welcomeSubtitle}>Stay alert, stay safe.</Text>
-        </View>
+        {/* Cover Header Banner */}
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.bannerHeaderRow}>
+              <View style={styles.bannerBrandContainer}>
+                <View style={styles.shieldIconContainer}>
+                  <Ionicons name="shield-checkmark" size={22} color="#FFFFFF" />
+                </View>
+                <View>
+                  <Text style={styles.bannerTitle}>Wildlife Ranger</Text>
+                  <Text style={styles.bannerSubtitle}>Conservation & Protection</Text>
+                </View>
+              </View>
 
-        {/* Main Action Card */}
-        <TouchableOpacity 
-          style={styles.actionCard} 
-          activeOpacity={0.8}
-          onPress={handleReportIncident}
-        >
-          <View style={styles.actionIconContainer}>
-            <Ionicons name="warning-outline" size={32} color={AppTheme.colors.background} />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.actionTitle}>Report Wildlife Incident</Text>
-            <Text style={styles.actionDescription}>
-              Report wildlife, poaching or other suspicious incidents encountered during patrol.
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Recent Incidents Section */}
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Incidents</Text>
-          
-          <View style={styles.emptyStateContainer}>
-            <Ionicons name="document-text-outline" size={48} color={AppTheme.colors.textSecondary} />
-            <Text style={styles.emptyStateText}>No incidents reported yet</Text>
+              {/* Dark Mode Toggle Button */}
+              <TouchableOpacity 
+                style={styles.darkToggleBtn} 
+                onPress={toggleTheme}
+                activeOpacity={0.8}
+              >
+                <Ionicons 
+                  name={isDarkMode ? "sunny" : "moon"} 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
+        {/* Content Body */}
+        <View style={styles.contentBody}>
+
+          {/* Welcome Bar */}
+          <View style={styles.welcomeBar}>
+            <View style={styles.welcomeTextGroup}>
+              <Text style={[styles.welcomeTitle, { color: theme.textPrimary }]}>
+                Welcome back, {displayName} 👋
+              </Text>
+              <Text style={[styles.welcomeSubtitle, { color: theme.textSecondary }]}>Stay alert, stay safe.</Text>
+            </View>
+
+            {/* Profile Avatar */}
+            <TouchableOpacity 
+              style={styles.avatarWrapper} 
+              onPress={() => router.navigate('/(ranger)/profile')}
+              activeOpacity={0.8}
+            >
+              {photoUrl ? (
+                <Image source={{ uri: photoUrl }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: isDarkMode ? '#334155' : '#E3F2FD' }]}>
+                  <Ionicons name="person" size={24} color={isDarkMode ? '#94A3B8' : '#546E7A'} />
+                </View>
+              )}
+              <Text style={[styles.avatarLabel, { color: theme.textSecondary }]}>Ranger</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Action Card */}
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: theme.primary }]} 
+            activeOpacity={0.85}
+            onPress={handleReportIncident}
+          >
+            <View style={styles.actionIconBadge}>
+              <Ionicons name="warning-outline" size={26} color="#FFFFFF" />
+            </View>
+
+            <View style={styles.verticalDivider} />
+
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Report Wildlife Incident</Text>
+              <Text style={styles.actionDescription}>
+                Report wildlife, poaching or other suspicious incidents encountered during patrol.
+              </Text>
+            </View>
+
+            <View style={styles.arrowBadge}>
+              <Ionicons name="arrow-forward" size={18} color={theme.primary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Recent Incidents Section */}
+          <View style={styles.recentSection}>
+            <View style={styles.recentHeaderRow}>
+              <View style={styles.recentTitleGroup}>
+                <Ionicons name="document-text" size={20} color={theme.primary} style={{ marginRight: 6 }} />
+                <Text style={[styles.recentSectionTitle, { color: theme.textPrimary }]}>Recent Incidents</Text>
+              </View>
+              <TouchableOpacity style={styles.viewAllBtn}>
+                <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
+                <Ionicons name="arrow-forward" size={14} color={theme.primary} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Empty State Box */}
+            <View style={[styles.emptyCard, { backgroundColor: theme.emptyCardBg, borderColor: isDarkMode ? '#334155' : '#B0BEC5' }]}>
+              <View style={[styles.emptyIconBg, { backgroundColor: isDarkMode ? '#334155' : '#E3F2FD' }]}>
+                <Ionicons name="document-text-outline" size={32} color={isDarkMode ? '#94A3B8' : '#546E7A'} />
+              </View>
+              <Text style={[styles.emptyStateTitle, { color: theme.textPrimary }]}>No incidents reported yet</Text>
+              <Text style={[styles.emptyStateSubtitle, { color: theme.textSecondary }]}>
+                Once you report an incident, it will appear here for easy tracking and management.
+              </Text>
+            </View>
+          </View>
+
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -54,77 +150,213 @@ export default function RangerDashboard() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: AppTheme.colors.background,
   },
   container: {
     flex: 1,
   },
-  contentContainer: {
-    padding: AppTheme.spacing.md,
+  bannerContainer: {
+    height: 105,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: AppTheme.colors.header,
   },
-  welcomeSection: {
-    marginBottom: AppTheme.spacing.lg,
-    marginTop: AppTheme.spacing.md,
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.92,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: AppTheme.spacing.md,
+    paddingBottom: 10,
+    paddingTop: 8,
+    backgroundColor: 'rgba(13, 71, 161, 0.45)',
+  },
+  bannerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bannerBrandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shieldIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  bannerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  bannerSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 1,
+  },
+  darkToggleBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentBody: {
+    paddingHorizontal: AppTheme.spacing.md,
+    paddingTop: 12,
+    paddingBottom: AppTheme.spacing.lg,
+  },
+  welcomeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  welcomeTextGroup: {
+    flex: 1,
+    marginRight: 8,
   },
   welcomeTitle: {
-    ...AppTheme.typography.h2,
-    color: AppTheme.colors.header,
-    marginBottom: AppTheme.spacing.xs,
+    fontSize: 19,
+    fontWeight: '700',
+    lineHeight: 24,
   },
   welcomeSubtitle: {
-    ...AppTheme.typography.body,
-    color: AppTheme.colors.textSecondary,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  avatarWrapper: {
+    alignItems: 'center',
+  },
+  avatarImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 2,
+    borderColor: '#E3F2FD',
+  },
+  avatarPlaceholder: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    fontWeight: '600',
   },
   actionCard: {
-    backgroundColor: AppTheme.colors.primary,
-    borderRadius: AppTheme.borderRadius.lg,
+    borderRadius: 14,
     padding: AppTheme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: AppTheme.spacing.xl,
-    ...AppTheme.shadows.md,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
-  actionIconContainer: {
+  actionIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: AppTheme.spacing.sm,
-    borderRadius: AppTheme.borderRadius.pill,
-    marginRight: AppTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 38,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 12,
   },
   actionTextContainer: {
     flex: 1,
+    marginRight: 6,
   },
   actionTitle: {
-    ...AppTheme.typography.h3,
-    color: AppTheme.colors.background,
-    marginBottom: AppTheme.spacing.xs,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 2,
   },
   actionDescription: {
-    ...AppTheme.typography.bodySmall,
-    color: AppTheme.colors.background,
-    opacity: 0.9,
+    fontSize: 11.5,
+    color: 'rgba(255, 255, 255, 0.88)',
+    lineHeight: 15,
   },
-  recentSection: {
-    flex: 1,
-  },
-  sectionTitle: {
-    ...AppTheme.typography.h3,
-    color: AppTheme.colors.header,
-    marginBottom: AppTheme.spacing.md,
-  },
-  emptyStateContainer: {
-    padding: AppTheme.spacing.xl,
+  arrowBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppTheme.colors.selected,
-    borderRadius: AppTheme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: AppTheme.colors.textSecondary,
-    borderStyle: 'dashed',
   },
-  emptyStateText: {
-    ...AppTheme.typography.body,
-    color: AppTheme.colors.textSecondary,
-    marginTop: AppTheme.spacing.sm,
-    fontWeight: AppTheme.fontWeights.medium,
+  recentSection: {
+    marginTop: 2,
+  },
+  recentHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  recentTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recentSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  emptyCard: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    paddingVertical: AppTheme.spacing.lg,
+    paddingHorizontal: AppTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconBg: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  emptyStateTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  emptyStateSubtitle: {
+    fontSize: 12.5,
+    textAlign: 'center',
+    lineHeight: 17,
   },
 });

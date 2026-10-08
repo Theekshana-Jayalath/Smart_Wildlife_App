@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { INCIDENT_TYPES } from '../../constants/incidents';
 import { IncidentType } from '../../types/incident';
 import { AppTheme } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Props {
   selectedType: IncidentType | null;
@@ -11,27 +12,47 @@ interface Props {
 }
 
 export const IncidentTypeSelect = ({ selectedType, onSelect }: Props) => {
+  const { theme, isDarkMode } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Incident Type <Text style={styles.required}>*</Text></Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>
+        Incident Type <Text style={styles.required}>*</Text>
+      </Text>
       <View style={styles.grid}>
         {INCIDENT_TYPES.map((type) => {
           const isSelected = selectedType === type.id;
           return (
             <TouchableOpacity
               key={type.id}
-              style={[styles.card, isSelected && styles.cardSelected]}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: isSelected
+                    ? isDarkMode ? '#1E3A8A' : AppTheme.colors.selected
+                    : theme.cardBg,
+                  borderColor: isSelected ? theme.primary : theme.inputBorder,
+                },
+              ]}
               onPress={() => onSelect(type.id)}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconContainer, isSelected && styles.iconContainerSelected]}>
+              <View style={styles.iconContainer}>
                 <Ionicons
                   name={type.icon as any}
                   size={24}
-                  color={isSelected ? AppTheme.colors.primary : AppTheme.colors.textSecondary}
+                  color={isSelected ? theme.primary : theme.textSecondary}
                 />
               </View>
-              <Text style={[styles.cardLabel, isSelected && styles.cardLabelSelected]}>
+              <Text
+                style={[
+                  styles.cardLabel,
+                  {
+                    color: isSelected ? theme.primary : theme.textSecondary,
+                    fontWeight: isSelected ? '700' : '400',
+                  },
+                ]}
+              >
                 {type.label}
               </Text>
             </TouchableOpacity>
@@ -48,7 +69,6 @@ const styles = StyleSheet.create({
   },
   label: {
     ...AppTheme.typography.h3,
-    color: AppTheme.colors.header,
     marginBottom: AppTheme.spacing.md,
   },
   required: {
@@ -61,30 +81,17 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    backgroundColor: AppTheme.colors.background,
     borderRadius: AppTheme.borderRadius.md,
     padding: AppTheme.spacing.md,
     borderWidth: 1,
-    borderColor: '#E0E1E6', 
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cardSelected: {
-    borderColor: AppTheme.colors.primary,
-    backgroundColor: AppTheme.colors.selected,
   },
   iconContainer: {
     marginBottom: AppTheme.spacing.sm,
   },
-  iconContainerSelected: {
-  },
   cardLabel: {
     ...AppTheme.typography.bodySmall,
-    color: AppTheme.colors.textSecondary,
     textAlign: 'center',
-  },
-  cardLabelSelected: {
-    color: AppTheme.colors.primary,
-    fontWeight: AppTheme.fontWeights.semibold,
   },
 });

@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function TrackingScreen() {
+  const { theme } = useTheme();
   
   // We use a custom HTML string to load Leaflet (OpenStreetMap) inside a WebView.
   // This bypasses ALL Google Maps API Key and Billing requirements!
@@ -50,52 +53,55 @@ export default function TrackingScreen() {
   `;
 
   return (
-    <View style={styles.container}>
-      {/* 1. Header / Stats Section */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>Tracked</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={styles.container}>
+        {/* 1. Header / Stats Section */}
+        <View style={[styles.statsContainer, { backgroundColor: theme.background }]}>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: theme.primary }]}>12</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Tracked</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: theme.success }]}>10</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Safe</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: theme.danger }]}>2</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>High-Risk</Text>
+          </View>
         </View>
-        <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: '#2e7d32' }]}>10</Text>
-          <Text style={styles.statLabel}>Safe</Text>
-        </View>
-        <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: '#d32f2f' }]}>2</Text>
-          <Text style={styles.statLabel}>High-Risk</Text>
-        </View>
-      </View>
 
-      {/* 2. The Free OpenStreetMap (Leaflet) inside a WebView */}
-      <View style={styles.mapContainer}>
-        <WebView 
-          source={{ html: mapHtml }}
-          style={styles.map}
-          scrollEnabled={false} // Prevents the webpage itself from scrolling, allowing the map to drag
-        />
-      </View>
+        {/* 2. The Free OpenStreetMap (Leaflet) inside a WebView */}
+        <View style={styles.mapContainer}>
+          <WebView 
+            source={{ html: mapHtml }}
+            style={styles.map}
+            scrollEnabled={false}
+          />
+        </View>
 
-      {/* 3. Recent Updates Section */}
-      <View style={styles.updatesContainer}>
-        <Text style={styles.updatesTitle}>Recent Updates</Text>
-        <Text style={styles.updateText}>🐘 Elephant E-024 moved to North Boundary</Text>
-        <Text style={styles.updateText}>🐆 Leopard L-011 is near Farmland!</Text>
+        {/* 3. Recent Updates Section */}
+        <View style={[styles.updatesContainer, { backgroundColor: theme.background }]}>
+          <Text style={[styles.updatesTitle, { color: theme.textPrimary }]}>Recent Updates</Text>
+          <Text style={[styles.updateText, { color: theme.textSecondary }]}>🐘 Elephant E-024 moved to North Boundary</Text>
+          <Text style={[styles.updateText, { color: theme.textSecondary }]}>🐆 Leopard L-011 is near Farmland!</Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 15,
-    backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
     borderColor: '#e0e0e0',
   },
@@ -105,11 +111,9 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1976d2',
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
   },
   mapContainer: {
@@ -123,7 +127,6 @@ const styles = StyleSheet.create({
   updatesContainer: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderColor: '#e0e0e0',
   },
@@ -131,11 +134,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
   },
   updateText: {
     fontSize: 14,
-    color: '#555',
     marginBottom: 8,
   }
 });
