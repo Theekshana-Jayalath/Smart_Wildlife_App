@@ -8,6 +8,7 @@ import { PhotoCaptureCard } from '../../components/incident/PhotoCaptureCard';
 import { LocationCard } from '../../components/incident/LocationCard';
 import { Button } from '../../components/ui/Button';
 import { useCamera } from '../../hooks/useCamera';
+import { useDeviceLocation } from '../../hooks/useDeviceLocation';
 
 export default function ReportIncidentScreen() {
   const [type, setType] = useState<IncidentType | null>(null);
@@ -16,9 +17,10 @@ export default function ReportIncidentScreen() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [locating, setLocating] = useState(false);
   const { takePhoto, loading: cameraLoading } = useCamera();
+  const { fetchLocation, loading: locationLoading, error: locationError } = useDeviceLocation();
 
-  // Validation: description must not be empty, type must be selected
-  const isValid = type !== null && description.trim().length > 0;
+  // Validation: description must not be empty, type must be selected, AND location is required
+  const isValid = type !== null && description.trim().length > 0 && location !== null;
 
   const handleTakePhoto = async () => {
     const uri = await takePhoto();
@@ -27,13 +29,11 @@ export default function ReportIncidentScreen() {
     }
   };
 
-  const handleGetLocation = () => {
-    // TODO: Integrate actual GPS logic
-    setLocating(true);
-    setTimeout(() => {
-      setLocation({ latitude: -1.2921, longitude: 36.8219, accuracy: 5 });
-      setLocating(false);
-    }, 1200);
+  const handleGetLocation = async () => {
+    const loc = await fetchLocation();
+    if (loc) {
+      setLocation(loc);
+    }
   };
 
   const handleContinue = () => {
@@ -98,7 +98,8 @@ export default function ReportIncidentScreen() {
         {/* 4. GPS Location */}
         <LocationCard 
           location={location} 
-          loading={locating} 
+          loading={locationLoading}
+          error={locationError}
           onGetLocation={handleGetLocation} 
         />
 

@@ -7,15 +7,23 @@ import { LocationData } from '../../types/incident';
 interface Props {
   location: LocationData | null;
   loading: boolean;
+  error?: string | null;
   onGetLocation: () => void;
 }
 
-export const LocationCard = ({ location, loading, onGetLocation }: Props) => {
+export const LocationCard = ({ location, loading, error, onGetLocation }: Props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Location Details</Text>
       
-      <View style={styles.card}>
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="warning" size={24} color={AppTheme.colors.warning} />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      <View style={[styles.card, error && styles.cardWithError]}>
         <View style={styles.infoRow}>
           <Ionicons 
             name="location-outline" 
@@ -23,13 +31,18 @@ export const LocationCard = ({ location, loading, onGetLocation }: Props) => {
             color={location ? AppTheme.colors.success : AppTheme.colors.textSecondary} 
           />
           <View style={styles.textContainer}>
-            <Text style={styles.title}>Current Location</Text>
             {location ? (
-              <Text style={styles.coords}>
-                {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
-              </Text>
+              <>
+                <Text style={styles.titleSuccess}>Location Captured</Text>
+                <Text style={styles.coords}>
+                  Lat: {location.latitude.toFixed(5)}{'\n'}Lng: {location.longitude.toFixed(5)}
+                </Text>
+              </>
             ) : (
-              <Text style={styles.status}>Not recorded yet</Text>
+              <>
+                <Text style={styles.title}>Current Location</Text>
+                <Text style={styles.status}>Not recorded yet</Text>
+              </>
             )}
           </View>
         </View>
@@ -44,7 +57,7 @@ export const LocationCard = ({ location, loading, onGetLocation }: Props) => {
             <ActivityIndicator size="small" color={AppTheme.colors.primary} />
           ) : (
             <Text style={styles.actionBtnText}>
-              {location ? 'Update' : 'Get Location'}
+              {error ? 'Retry' : (location ? 'Update' : 'Get Location')}
             </Text>
           )}
         </TouchableOpacity>
@@ -62,6 +75,23 @@ const styles = StyleSheet.create({
     color: AppTheme.colors.header,
     marginBottom: AppTheme.spacing.sm,
   },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFDE7', // very light background for warning contrast
+    padding: AppTheme.spacing.sm,
+    borderRadius: AppTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: AppTheme.colors.warning,
+    marginBottom: AppTheme.spacing.sm,
+    gap: AppTheme.spacing.sm,
+  },
+  errorText: {
+    ...AppTheme.typography.bodySmall,
+    color: AppTheme.colors.warning,
+    flex: 1,
+    fontWeight: AppTheme.fontWeights.medium,
+  },
   card: {
     backgroundColor: AppTheme.colors.background,
     borderRadius: AppTheme.borderRadius.md,
@@ -71,6 +101,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  cardWithError: {
+    borderColor: AppTheme.colors.warning,
   },
   infoRow: {
     flexDirection: 'row',
@@ -85,14 +118,19 @@ const styles = StyleSheet.create({
     fontWeight: AppTheme.fontWeights.medium,
     color: AppTheme.colors.header,
   },
+  titleSuccess: {
+    ...AppTheme.typography.body,
+    fontWeight: AppTheme.fontWeights.bold,
+    color: AppTheme.colors.success,
+  },
   status: {
     ...AppTheme.typography.bodySmall,
-    color: AppTheme.colors.warning,
+    color: AppTheme.colors.textSecondary, // Uses Slate Gray as requested
     marginTop: 2,
   },
   coords: {
     ...AppTheme.typography.bodySmall,
-    color: AppTheme.colors.success,
+    color: AppTheme.colors.textSecondary,
     marginTop: 2,
   },
   actionBtn: {
@@ -100,6 +138,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: AppTheme.spacing.md,
     backgroundColor: AppTheme.colors.selected,
     borderRadius: AppTheme.borderRadius.md,
+    marginLeft: AppTheme.spacing.sm,
   },
   actionBtnText: {
     ...AppTheme.typography.bodySmall,
