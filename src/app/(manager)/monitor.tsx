@@ -100,16 +100,10 @@ export default function MonitorScreen() {
             var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
             
             var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
-            
-            if (r.isSOS) {
-              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS(\'' + r.id + '\')">Resolve SOS</button>';
-            }
-            
-            marker.bindPopup(popupContent);
+              marker.bindPopup(popupContent);
           });
           
-          function resolveSOS(id) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'RESOLVE_SOS', id: id }));
+          ));
           }
       </script>
   </body>
@@ -187,16 +181,29 @@ export default function MonitorScreen() {
               />
             </View>
             {rangers.filter(r => r.isSOS).length > 0 && (
-              <View style={[styles.stateCard, { backgroundColor: '#FFEBEE', borderColor: '#FFCDD2', borderWidth: 1, marginTop: 10 }]}>
-                <Ionicons name="warning" size={30} color="#D32F2F" />
-                <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16, marginTop: 10}}>
-                  {rangers.filter(r => r.isSOS).length} Ranger(s) need immediate assistance!
-                </Text>
-                <Text style={{color: '#C62828', textAlign: 'center', marginTop: 5}}>
-                  Click the red blinking marker on the map to resolve.
-                </Text>
-              </View>
-            )}
+                <View style={[styles.stateCard, { backgroundColor: '#FFEBEE', borderColor: '#FFCDD2', borderWidth: 1, marginTop: 10 }]}>
+                  <Ionicons name="warning" size={30} color="#D32F2F" />
+                  <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16, marginTop: 10}}>
+                    {rangers.filter(r => r.isSOS).length} Ranger(s) need immediate assistance!
+                  </Text>
+                  {rangers.filter(r => r.isSOS).map(r => (
+                     <View key={r.id} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 15, paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderRadius: 8}}>
+                        <Text style={{color: '#D32F2F', fontWeight: 'bold'}}>{r.name}</Text>
+                        <TouchableOpacity 
+                           style={{backgroundColor: '#D32F2F', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 5}}
+                           onPress={() => {
+                             Alert.alert("Confirm", "Mark this SOS as resolved?", [
+                                { text: "Cancel", style: "cancel" },
+                                { text: "Resolve", onPress: () => resolveRangerSOS(r.id) }
+                             ]);
+                           }}
+                        >
+                           <Text style={{color: '#fff', fontWeight: 'bold'}}>Resolve</Text>
+                        </TouchableOpacity>
+                     </View>
+                  ))}
+                </View>
+              )}
             </View>
         ) : (
           <View style={{ paddingBottom: 30 }}>
