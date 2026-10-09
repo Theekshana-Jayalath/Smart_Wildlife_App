@@ -13,6 +13,7 @@ export default function TrackingScreen() {
   const webViewRef = useRef<WebView>(null);
   
   const [showAlert, setShowAlert] = useState(false);
+  const [currentBreach, setCurrentBreach] = useState<any>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   
@@ -55,19 +56,16 @@ export default function TrackingScreen() {
     for (const zone of dangerZones) {
       if (isPointInPolygon({ lat, lng }, zone.points)) {
         if (!showAlert) {
-          setShowAlert(true);
-          setIsSimulating(false);
-          // Log to DB
-          await logIncident({
-            animalName: animal.name,
-            species: animal.species,
-            zoneName: zone.name,
-            time: new Date().toLocaleTimeString(),
-            timestamp: Date.now(),
-            lat,
-            lng
-          });
-        }
+            setCurrentBreach({
+              animalName: animal.name,
+              species: animal.species,
+              zoneName: zone.name,
+              lat,
+              lng
+            });
+            setShowAlert(true);
+            setIsSimulating(false);
+          }
         return true;
       }
     }
@@ -318,16 +316,27 @@ export default function TrackingScreen() {
             </View>
             <Text style={[styles.alertTitle, { color: theme.textPrimary }]}>DANGER ZONE BREACH</Text>
             <Text style={[styles.alertDesc, { color: theme.textSecondary }]}>
-              An animal has crossed a village boundary! The incident has been logged.
+              An animal has crossed a village boundary! Notify the manager to assign a patrol.
             </Text>
             
             <View style={styles.alertActions}>
-              <TouchableOpacity style={styles.dismissBtn} onPress={() => setShowAlert(false)}>
+              <TouchableOpacity style={styles.dismissBtn} onPress={() => { setShowAlert(false); setCurrentBreach(null); }}>
                 <Text style={styles.dismissText}>Dismiss</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.dispatchBtn} onPress={() => Alert.alert("SMS", "Broadcast not implemented yet")}>
-                <Ionicons name="megaphone" size={16} color="#fff" style={{marginRight: 5}} />
-                <Text style={styles.dispatchText}>Broadcast SMS</Text>
+              <TouchableOpacity style={styles.dispatchBtn} onPress={async () => {
+                if (currentBreach) {
+                    await logIncident({
+                        ...currentBreach,
+                        time: new Date().toLocaleTimeString(),
+                        timestamp: Date.now()
+                    });
+                    Alert.alert("Success", "Manager has been notified!");
+                    setShowAlert(false);
+                    setCurrentBreach(null);
+                }
+              }}>
+                <Ionicons name="send" size={16} color="#fff" style={{marginRight: 5}} />
+                <Text style={styles.dispatchText}>Notify Manager</Text>
               </TouchableOpacity>
             </View>
           </View>

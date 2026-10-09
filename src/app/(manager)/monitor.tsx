@@ -32,13 +32,13 @@ export default function MonitorScreen() {
     return subscribeToIncidents(setIncidents);
   }, []);
 
-  const handleBroadcastSMS = () => {
+  const handleBroadcastSMS = (zoneName: string) => {
     setIsBroadcasting(true);
     setTimeout(() => {
       setIsBroadcasting(false);
       Alert.alert(
         "Twilio Gateway Success", 
-        "✅ Broadcast complete!\n\nWarning SMS successfully sent to 142 registered villagers in the Danger Zone."
+        "\u2705 Broadcast complete!\n\nWarning SMS successfully sent to registered villagers in " + zoneName + " zone."
       );
     }, 2000);
   };
@@ -128,7 +128,7 @@ export default function MonitorScreen() {
                   <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
                     <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.btnSecondary} onPress={handleBroadcastSMS} disabled={isBroadcasting}>
+                  <TouchableOpacity style={styles.btnSecondary} onPress={() => handleBroadcastSMS(alert.zoneName)} disabled={isBroadcasting}>
                     {isBroadcasting ? (
                       <ActivityIndicator size="small" color={COLORS.primary} />
                     ) : (
