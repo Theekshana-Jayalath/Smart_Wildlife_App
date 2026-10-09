@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   Share,
   StyleSheet,
@@ -73,6 +74,43 @@ function parseDateValue(value: string, endOfDay: boolean): Date | null {
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function csvCell(value: string | number): string {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+function buildReportCsv(report: ConservationReport): string {
+  const rows: (string | number)[][] = [
+    ['Section', 'Metric', 'Value'],
+    ['Report', 'Type', REPORT_DEFINITIONS[report.kind].title],
+    ['Report', 'From', report.startDate.toISOString()],
+    ['Report', 'To', report.endDate.toISOString()],
+    ['Report', 'Generated', report.generatedAt.toISOString()],
+    ['Incidents', 'Total', report.incidents.total],
+    ['Incidents', 'Missing locations', report.incidents.missingLocations],
+    ...report.incidents.categories.map((item) => ['Incident category', item.label, item.count]),
+    ...report.incidents.trend.map((item) => ['Incident trend', item.label, item.count]),
+    ['Poaching', 'Candidate incidents', report.poaching.candidateIncidentCount],
+    ['Poaching', 'Potential clusters', report.poaching.hotspots.length],
+    ...report.poaching.hotspots.map((item) => ['Potential hotspot', item.label, item.incidents]),
+    ['Patrols', 'Assignments', report.patrols.assigned],
+    ['Patrols', 'Completed', report.patrols.completed],
+    ['Patrols', 'Completion percent', report.patrols.completionPercent ?? 'Unavailable'],
+    ['Patrols', 'Planned route distance km', report.patrols.plannedDistanceKm],
+    ['Patrols', 'GPS spatial coverage', 'Unavailable: GPS trail is not uploaded'],
+    ...report.patrols.routeProgress.map((item) => ['Patrol route', item.routeName, `${item.completed}/${item.assigned} complete`]),
+    ['Community conflicts', 'Total', report.conflicts.total],
+    ['Community conflicts', 'Missing locations', report.conflicts.missingLocations],
+    ...report.conflicts.categories.map((item) => ['Conflict category', item.label, item.count]),
+    ...report.conflicts.trend.map((item) => ['Conflict trend', item.label, item.count]),
+    ...(['incidents', 'patrols', 'conflicts'] as const).map((source) => [
+      'Data source',
+      source,
+      `${report.sourceResults[source].state}: ${report.sourceResults[source].records.length} records${report.sourceResults[source].error ? ` (${report.sourceResults[source].error})` : ''}`,
+    ]),
+  ];
+  return rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
 }
 
 function hasReportResults(report: ConservationReport, kind: ReportKind): boolean {
@@ -342,17 +380,23 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
     }
   }
 
-  async function shareReport() {
+  async function exportReport() {
     if (!report) return;
-    const message = [
-      `${REPORT_DEFINITIONS[kind].title}: ${formatDate(report.startDate)} – ${formatDate(report.endDate)}`,
-      `Incidents: ${report.incidents.total}`,
-      `Potential poaching hotspots: ${report.poaching.hotspots.length}`,
-      `Patrol assignments completed: ${report.patrols.completed}/${report.patrols.assigned}`,
-      `Community conflict reports: ${report.conflicts.total}`,
-      report.partialData ? 'Partial data: some source collections are unavailable.' : 'All connected sources returned data.',
-    ].join('\n');
-    await Share.share({ title: 'Conservation report', message });
+    const csv = buildReportCsv(report);
+    const filename = `conservation-report-${localDateValue(report.generatedAt)}.csv`;
+
+    if (Platform.OS === 'web') {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    await Share.share({ title: filename, message: csv });
   }
 
   const stageIndex = progress ? STAGES.findIndex((stage) => stage.id === progress) : -1;
@@ -498,8 +542,8 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
           <>
             <ResultPanel report={report} kind={kind} theme={theme} />
             <View style={styles.resultActions}>
-              <TouchableOpacity accessibilityRole="button" onPress={shareReport} style={styles.shareButton} activeOpacity={0.8}>
-                <Ionicons name="share-outline" size={18} color={COLORS.primary} /><Text style={styles.shareText}>Share report summary</Text>
+              <TouchableOpacity accessibilityRole="button" onPress={exportReport} style={styles.shareButton} activeOpacity={0.8}>
+                <Ionicons name="download-outline" size={18} color={COLORS.primary} /><Text style={styles.shareText}>Export report (CSV)</Text>
               </TouchableOpacity>
               <TouchableOpacity accessibilityRole="button" onPress={() => setViewState('idle')} style={styles.backButton} activeOpacity={0.8}>
                 <Text style={styles.backText}>Back to report options</Text>

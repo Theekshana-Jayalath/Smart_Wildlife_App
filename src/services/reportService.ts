@@ -60,6 +60,24 @@ function incidentFromDocument(id: string, data: Record<string, unknown>): Incide
   };
 }
 
+function communityReportFromDocument(id: string, data: Record<string, unknown>): IncidentRecord | null {
+  const occurredAt = parseReportDate(data.createdAt);
+  if (!occurredAt) return null;
+  const location = typeof data.location === 'object' && data.location !== null
+    ? data.location as Record<string, unknown>
+    : {};
+  return {
+    id,
+    occurredAt,
+    category: text(data, ['conflictType', 'reportType', 'incidentType', 'type']),
+    status: text(data, ['status']),
+    latitude: number(data, 'latitude') ?? number(location, 'latitude'),
+    longitude: number(data, 'longitude') ?? number(location, 'longitude'),
+    area: text(data, ['area', 'zone', 'parkName', 'locationName'])
+      ?? text(location, ['area', 'name']),
+  };
+}
+
 function patrolFromDocument(id: string, data: Record<string, unknown>): PatrolRecord | null {
   const patrolDate = parseReportDate(data.patrolDate);
   if (!patrolDate) return null;
@@ -133,8 +151,23 @@ async function readPatrols(range: ReportDateRange): Promise<SourceResult<PatrolR
   }
 }
 
-async function readCommunityReports(_range: ReportDateRange): Promise<SourceResult<IncidentRecord>> {
-  return unavailable('Community reports are not connected to a Firestore collection in the current app.');
+async function readCommunityReports(range: ReportDateRange): Promise<SourceResult<IncidentRecord>> {
+  try {
+    const reference = query(
+      collection(db, 'community_reports'),
+      where('createdAt', '>=', Timestamp.fromDate(range.startDate)),
+      where('createdAt', '<=', Timestamp.fromDate(range.endDate)),
+    );
+    const snapshot = await getDocs(reference);
+    const records = snapshot.docs
+      .map((item) => communityReportFromDocument(item.id, item.data()))
+      .filter((item): item is IncidentRecord => item !== null);
+    return result(records);
+  } catch (error) {
+    return unavailable(getErrorCode(error) === 'permission-denied'
+      ? 'Your Firebase rules do not allow this account to read community reports.'
+      : 'Community reports could not be loaded.');
+  }
 }
 
 function hasAnySource(sources: ReportSources): boolean {
