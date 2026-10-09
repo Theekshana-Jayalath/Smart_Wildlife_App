@@ -81,7 +81,7 @@ export default function ManageScreen() {
         {/* 2. Manage Animals (IoT Collars) */}
         <TouchableOpacity 
           style={[styles.menuCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]} 
-          onPress={() => router.push('/(manager)/manage-animals')}
+          onPress={() => router.push('/(manager)/manage-animals' as any)}
           activeOpacity={0.8}
         >
           <View style={styles.iconBox}>

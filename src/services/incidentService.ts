@@ -6,6 +6,7 @@ import {
   doc,
   query,
   where,
+  getDocs,
   onSnapshot,
   Timestamp,
   Unsubscribe,
@@ -190,4 +191,166 @@ export class IncidentService {
       }
     );
   }
+
+  /**
+   * Realtime subscription for Manager to view all incidents.
+   * Also fetches ranger user display names from user_roles where available.
+   */
+  static subscribeToAllIncidents(
+    onChange: (incidents: (RangerIncident & { rangerName?: string; rawData: any })[]) => void,
+    onError?: (error: Error) => void
+  ): Unsubscribe {
+    const q = collection(db, 'incidents');
+
+    return onSnapshot(
+      q,
+      async (snapshot) => {
+        try {
+          // Collect ranger IDs to resolve display names
+          const rangerIds = Array.from(new Set(snapshot.docs.map((d) => d.data().rangerId).filter(Boolean)));
+          const rangerNames: Record<string, string> = {};
+
+          if (rangerIds.length > 0) {
+            try {
+              const usersQuery = query(collection(db, 'user_roles'));
+              const usersSnap = await getDocs(usersQuery);
+              usersSnap.docs.forEach((uDoc) => {
+                const uData = uDoc.data();
+                rangerNames[uDoc.id] = uData.displayName || uData.name || uData.email || uDoc.id;
+              });
+            } catch (err) {
+              console.warn('Could not load user_roles for ranger names:', err);
+            }
+          }
+
+          const items = snapshot.docs.map((d) => {
+            const data = d.data();
+            const createdAt =
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toMillis()
+                : typeof data.createdAt === 'number'
+                ? data.createdAt
+                : Date.now();
+
+            return {
+              id: d.id,
+              incidentType: data.incidentType ?? 'unknown',
+              description: data.description ?? '',
+              latitude: Number(data.latitude) || 0,
+              longitude: Number(data.longitude) || 0,
+              photoUrl: data.photoUrl ?? null,
+              status: data.status ?? 'SUBMITTED',
+              createdAt,
+              isPendingSync: false,
+              rangerName: rangerNames[data.rangerId] || data.rangerId || 'Unknown Ranger',
+              rawData: data,
+            };
+          });
+
+          items.sort((a, b) => b.createdAt - a.createdAt);
+          onChange(items);
+        } catch (err: any) {
+          console.error('Error parsing incidents snapshot:', err);
+          onError?.(err);
+        }
+      },
+      (error) => {
+        console.error('Failed to load all incidents:', error);
+        onError?.(error);
+      }
+    );
+  }
+
+  /**
+   * Updates an incident status to PROCESSING.
+   */
+  static async startProcessingIncident(incidentId: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Authentication required.');
+
+    const incidentRef = doc(db, 'incidents', incidentId);
+    await setDoc(
+      incidentRef,
+      {
+        status: 'PROCESSING',
+        statusUpdatedAt: serverTimestamp(),
+        reviewedBy: user.uid,
+        reviewedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
+  /**
+   * Closes an incident with a short closure reason.
+   */
+  static async closeIncident(incidentId: string, closureReason: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Authentication required.');
+
+    const incidentRef = doc(db, 'incidents', incidentId);
+    await setDoc(
+      incidentRef,
+      {
+        status: 'CLOSED',
+        closureReason: closureReason.trim() || 'Closed by Manager (no field action required)',
+        statusUpdatedAt: serverTimestamp(),
+        closedBy: user.uid,
+        closedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
+  /**
+   * Links an incident to an assigned patrol and updates status to ASSIGNED.
+   */
+  static async linkIncidentToPatrol(incidentId: string, patrolAssignmentId: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Authentication required.');
+
+    const incidentRef = doc(db, 'incidents', incidentId);
+    await setDoc(
+      incidentRef,
+      {
+        status: 'ASSIGNED',
+        assignedPatrolId: patrolAssignmentId,
+        statusUpdatedAt: serverTimestamp(),
+        assignedBy: user.uid,
+        assignedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
+  /**
+   * Called upon patrol completion to resolve any incident linked to the patrol.
+   */
+  static async resolveIncidentIfLinked(patrolAssignmentId: string, resolutionOutcome?: string): Promise<void> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Authentication required.');
+
+    try {
+      const q = query(collection(db, 'incidents'), where('assignedPatrolId', '==', patrolAssignmentId));
+      const snapshot = await getDocs(q);
+
+      for (const incidentDoc of snapshot.docs) {
+        const incidentRef = doc(db, 'incidents', incidentDoc.id);
+        await setDoc(
+          incidentRef,
+          {
+            status: 'RESOLVED',
+            statusUpdatedAt: serverTimestamp(),
+            resolvedAt: serverTimestamp(),
+            resolutionOutcome: resolutionOutcome || 'Patrol completed successfully',
+          },
+          { merge: true }
+        );
+      }
+    } catch (err) {
+      console.error('Failed to resolve linked incidents:', err);
+      // Non-blocking for patrol completion, but log error
+    }
+  }
 }
+

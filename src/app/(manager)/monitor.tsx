@@ -49,7 +49,7 @@ export default function MonitorScreen() {
               <Ionicons name="map-outline" size={26} color={COLORS.white} />
             </View>
             <View style={styles.headerCopy}>
-              <Text style={styles.headerEyebrow}>LIVE TRACKING · MANAGER</Text>
+              <Text style={styles.headerEyebrow}>LIVE TRACKING ï¿½ MANAGER</Text>
               <Text style={styles.headerTitle}>System Monitor</Text>
               <Text style={styles.headerSubtitle}>View real-time locations and alerts</Text>
             </View>
@@ -97,7 +97,7 @@ export default function MonitorScreen() {
                 <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>Live Alerts Inbox</Text>
                 <Text style={styles.resultRange}>Showing high-risk notifications</Text>
               </View>
-              <TouchableOpacity onPress={() => router.push('/(manager)/all-alerts')}>
+              <TouchableOpacity onPress={() => router.push('/(manager)/all-alerts' as any)}>
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>

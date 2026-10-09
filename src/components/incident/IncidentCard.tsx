@@ -5,12 +5,17 @@ import { INCIDENT_TYPES } from '../../constants/incidents';
 import { RangerIncident } from '../../services/incidentService';
 import { useTheme } from '../../context/ThemeContext';
 
+import { AppColors } from '../../constants/colors';
+
 const STATUS_META: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  PENDING_SYNC: { label: 'Pending Sync', color: '#F59E0B', icon: 'cloud-offline-outline' },
-  SUBMITTED: { label: 'Submitted', color: '#3B82F6', icon: 'paper-plane-outline' },
-  UNDER_REVIEW: { label: 'Under Review', color: '#8B5CF6', icon: 'eye-outline' },
-  IN_PROGRESS: { label: 'In Progress', color: '#0EA5E9', icon: 'construct-outline' },
-  RESOLVED: { label: 'Resolved', color: '#10B981', icon: 'checkmark-done-outline' },
+  PENDING_SYNC: { label: 'Pending Sync', color: AppColors.warningYellow, icon: 'cloud-offline-outline' },
+  SUBMITTED: { label: 'Submitted', color: AppColors.primaryBlue, icon: 'paper-plane-outline' },
+  PROCESSING: { label: 'Processing', color: '#8B5CF6', icon: 'sync-outline' },
+  UNDER_REVIEW: { label: 'Processing', color: '#8B5CF6', icon: 'sync-outline' },
+  IN_PROGRESS: { label: 'Processing', color: '#8B5CF6', icon: 'sync-outline' },
+  ASSIGNED: { label: 'Assigned', color: AppColors.darkBlue, icon: 'person-add-outline' },
+  CLOSED: { label: 'Closed', color: AppColors.slateGray, icon: 'close-circle-outline' },
+  RESOLVED: { label: 'Resolved', color: AppColors.safeGreen, icon: 'checkmark-done-outline' },
 };
 
 export function getStatusMeta(status: string) {

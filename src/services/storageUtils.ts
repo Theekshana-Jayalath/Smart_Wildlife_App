@@ -73,15 +73,9 @@ export async function uploadImageToStorage(uri: string, path: string): Promise<s
     console.warn('Native FileSystem upload error, trying SDK fallback...', nativeError);
   }
 
-  // SDK Fallback using XMLHttpRequest Blob
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.onload = () => resolve(xhr.response);
-    xhr.onerror = () => reject(new TypeError('Network request failed'));
-    xhr.responseType = 'blob';
-    xhr.open('GET', uri, true);
-    xhr.send(null);
-  });
+  // SDK Fallback using fetch to convert local URI to Blob
+  const fetchResponse = await fetch(uri);
+  const blob = await fetchResponse.blob();
 
   try {
     const storageRef = ref(storage, path);

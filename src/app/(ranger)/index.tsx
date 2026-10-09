@@ -42,7 +42,7 @@ export default function RangerDashboard() {
   );
 
   const handleReportIncident = () => {
-    router.push('/(ranger)/incident');
+    router.push('/(ranger)/incident?reset=true');
   };
 
   return (
