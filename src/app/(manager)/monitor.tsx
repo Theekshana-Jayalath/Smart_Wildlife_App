@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
+import { IncidentAlert, subscribeToIncidents } from '../../services/incidentService';
 
 // Using exact colors from the Reports screen for consistency!
 const bannerImage = require('../../assets/banner.jpg');
@@ -25,6 +26,11 @@ export default function MonitorScreen() {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const router = useRouter();
   const { theme, isDarkMode, toggleTheme } = useTheme();
+  const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
+  
+  React.useEffect(() => {
+    return subscribeToIncidents(setIncidents);
+  }, []);
 
   const handleBroadcastSMS = () => {
     setIsBroadcasting(true);
@@ -49,7 +55,7 @@ export default function MonitorScreen() {
               <Ionicons name="map-outline" size={26} color={COLORS.white} />
             </View>
             <View style={styles.headerCopy}>
-              <Text style={styles.headerEyebrow}>LIVE TRACKING · MANAGER</Text>
+              <Text style={styles.headerEyebrow}>LIVE TRACKING ï¿½ MANAGER</Text>
               <Text style={styles.headerTitle}>System Monitor</Text>
               <Text style={styles.headerSubtitle}>View real-time locations and alerts</Text>
             </View>
@@ -102,55 +108,37 @@ export default function MonitorScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Alert Card 1 (System) */}
-            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
-              <View style={styles.alertHeader}>
-                <Ionicons name="warning" size={20} color={COLORS.red} />
-                <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: E-024</Text>
+            
+            {incidents.length === 0 ? (
+              <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
+                <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
+                <Text style={{color: theme.textSecondary, marginTop: 10}}>No active alerts today.</Text>
               </View>
-              <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>Elephant detected 1km from Village Boundary!</Text>
-              
-              <Text style={styles.alertTime}>2 mins ago (Ack: Ranger #03)</Text>
+            ) : incidents.map(alert => (
+              <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
+                <View style={styles.alertHeader}>
+                  <Ionicons name="warning" size={20} color={COLORS.red} />
+                  <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {alert.species.toUpperCase()}</Text>
+                </View>
+                <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{alert.animalName} breached {alert.zoneName}!</Text>
+                
+                <Text style={styles.alertTime}>{alert.time}</Text>
 
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
-                  <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.btnSecondary} onPress={handleBroadcastSMS} disabled={isBroadcasting}>
-                  {isBroadcasting ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
-                  )}
-                </TouchableOpacity>
+                <View style={styles.actionRow}>
+                  <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
+                    <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnSecondary} onPress={handleBroadcastSMS} disabled={isBroadcasting}>
+                    {isBroadcasting ? (
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    ) : (
+                      <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-
-            {/* Alert Card 2 (Community) */}
-            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.yellow, borderLeftWidth: 4 }]}>
-              <View style={styles.alertHeader}>
-                <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.yellow} />
-                <Text style={[styles.cardTitle, { color: COLORS.yellow, marginLeft: 8 }]}>COMMUNITY REPORT</Text>
-              </View>
-              <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>"Elephant spotted eating crops near North Farm."</Text>
-              
-              <Text style={styles.alertTime}>SMS: +94 77 *** ****</Text>
-
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: COLORS.yellow }]} onPress={() => router.push('/(manager)/assign')}>
-                  <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.btnSecondary} onPress={handleBroadcastSMS} disabled={isBroadcasting}>
-                  {isBroadcasting ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-          </View>
+            ))}
+</View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -203,6 +191,7 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
   btnSecondaryText: { color: COLORS.darkBlue, fontSize: 13, fontWeight: '700' },
 });
+
 
 
 

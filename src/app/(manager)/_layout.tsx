@@ -39,7 +39,12 @@ export default function TabLayout() {
         name="danger-zones"
         options={{ href: null, title: 'Danger Zones' }}
       />
+          <Tabs.Screen
+        name="manage-animals"
+        options={{ href: null, title: 'Manage Animals' }}
+      />
     </Tabs>
   );
 }
+
 
