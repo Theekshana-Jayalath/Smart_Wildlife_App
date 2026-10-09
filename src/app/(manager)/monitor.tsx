@@ -177,8 +177,9 @@ export default function MonitorScreen() {
         {activeTab === 'rangers' ? (
                       <View>
   <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
-              <WebView 
-                originWhitelist={['*']}
+              <WebView
+                  key={JSON.stringify(rangers)}
+                  originWhitelist={['*']}
                 source={{ html: rangersMapHtml }}
                 onMessage={handleWebViewMessage}
                 style={{ flex: 1 }}
