@@ -31,12 +31,21 @@ export default function MonitorScreen() {
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
   const [rangers, setRangers] = React.useState<RangerLocation[]>([]);
+  const webViewRef = React.useRef<WebView>(null);
   
   React.useEffect(() => {
     const unsubInc = subscribeToIncidents(setIncidents);
     const unsubRangers = subscribeToRangers(setRangers);
       return () => { unsubInc(); unsubRangers(); };
   }, []);
+
+  React.useEffect(() => {
+    if (webViewRef.current && rangers.length > 0) {
+      const script = `updateRangers(${JSON.stringify(rangers)});`;
+      webViewRef.current.injectJavaScript(script);
+    }
+  }, [rangers]);
+
 
   const handleBroadcastSMS = (alertId: string, zoneName: string) => {
     setBroadcastingIds(prev => ({...prev, [alertId]: true}));
@@ -91,11 +100,30 @@ export default function MonitorScreen() {
           var map = L.map('map').setView([6.3750, 81.5140], 14); 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-          var rangers = ${JSON.stringify(rangers)};
           
-          rangers.forEach(function(r) {
-            var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
-            var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
+          // Keep a global array of markers so we can remove them before redrawing
+          if (!window.rangerMarkers) window.rangerMarkers = [];
+          
+          window.updateRangers = function(rangersData) {
+            // Remove old markers
+            window.rangerMarkers.forEach(function(m) { map.removeLayer(m); });
+            window.rangerMarkers = [];
+            
+            rangersData.forEach(function(r) {
+              var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
+              var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
+              
+              var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
+              var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
+              marker.bindPopup(popupContent);
+              
+              window.rangerMarkers.push(marker);
+            });
+          };
+          
+          // Initial draw
+          window.updateRangers(${JSON.stringify(rangers)});
+
             
             var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
             
@@ -172,7 +200,7 @@ export default function MonitorScreen() {
                       <View>
   <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
               <WebView
-                  key={JSON.stringify(rangers)}
+                  ref={webViewRef}
                   originWhitelist={['*']}
                 source={{ html: rangersMapHtml }}
                 onMessage={handleWebViewMessage}
