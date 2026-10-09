@@ -1,2 +1,403 @@
-import { View, Text } from 'react-native';
-export default function assignScreen() { return <View><Text>assign Screen</Text></View> }
+import { Picker } from '@react-native-picker/picker';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import RoutePickerMap, {
+  calculateDistance,
+} from '../../components/patrol/RoutePickerMap';
+import type {
+  RangerProfile,
+  RoutePoint,
+} from '../../services/patrolService';
+import { PatrolService } from '../../services/patrolService';
+
+function isValidDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const date = new Date(`${value}T00:00:00Z`);
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value
+  );
+}
+
+export default function AssignScreen() {
+  const [points, setPoints] = useState<RoutePoint[]>([]);
+  const [routeName, setRouteName] = useState('');
+  const [rangerUid, setRangerUid] = useState('');
+  const [rangers, setRangers] = useState<RangerProfile[]>([]);
+  const [patrolDate, setPatrolDate] = useState('');
+  const [duration, setDuration] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fetchingRangers, setFetchingRangers] = useState(true);
+  const [rangerError, setRangerError] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [reloadRangers, setReloadRangers] = useState(0);
+  const [mapKey, setMapKey] = useState(0);
+  const submitting = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadRangers() {
+      setFetchingRangers(true);
+      setRangerError('');
+
+      try {
+        const data = await PatrolService.getAvailableRangers();
+
+        if (active) {
+          setRangers(data);
+        }
+      } catch (err: unknown) {
+        if (active) {
+          setRangerError(
+            err instanceof Error
+              ? err.message
+              : 'Could not load rangers.',
+          );
+        }
+      } finally {
+        if (active) setFetchingRangers(false);
+      }
+    }
+
+    void loadRangers();
+
+    return () => {
+      active = false;
+    };
+  }, [reloadRangers]);
+
+  async function handleAssign() {
+    if (submitting.current) return;
+
+    setError('');
+    setSuccess('');
+
+    const name = routeName.trim();
+    const date = patrolDate.trim();
+    const minutes = Number(duration.trim());
+
+    if (!name) {
+      setError('Enter a route name.');
+      return;
+    }
+
+    if (!rangers.some((ranger) => ranger.uid === rangerUid)) {
+      setError('Select a ranger.');
+      return;
+    }
+
+    if (!isValidDate(date)) {
+      setError('Enter a valid date in YYYY-MM-DD format.');
+      return;
+    }
+
+    if (!Number.isInteger(minutes) || minutes <= 0) {
+      setError('Duration must be a positive whole number of minutes.');
+      return;
+    }
+
+    const starts = points.filter((point) => point.type === 'start');
+    const ends = points.filter((point) => point.type === 'end');
+
+    if (
+      starts.length !== 1 ||
+      ends.length !== 1 ||
+      points[0]?.type !== 'start' ||
+      points[points.length - 1]?.type !== 'end'
+    ) {
+      setError('Select a Start and End point on the map.');
+      return;
+    }
+
+    const invalidCoordinates = points.some(
+      (point) =>
+        !Number.isFinite(point.latitude) ||
+        !Number.isFinite(point.longitude) ||
+        Math.abs(point.latitude) > 90 ||
+        Math.abs(point.longitude) > 180,
+    );
+
+    if (invalidCoordinates) {
+      setError('The route contains invalid coordinates.');
+      return;
+    }
+
+    submitting.current = true;
+    setLoading(true);
+
+    try {
+      await PatrolService.assignPatrolRoute({
+        rangerUid,
+        routeName: name,
+        points,
+        approximateDistanceKm: calculateDistance(points),
+        patrolDate: date,
+        estimatedDurationMinutes: minutes,
+      });
+
+      setSuccess(`"${name}" assigned successfully.`);
+      setPoints([]);
+      setRouteName('');
+      setRangerUid('');
+      setPatrolDate('');
+      setDuration('');
+
+      // Reset the map's local undo history after successful submission.
+      setMapKey((value) => value + 1);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not save the assignment.',
+      );
+    } finally {
+      submitting.current = false;
+      setLoading(false);
+    }
+  }
+
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.title}>Plan a patrol</Text>
+      <Text style={styles.subtitle}>
+        Choose points on the map, then assign a ranger.
+      </Text>
+
+      <View pointerEvents={loading ? 'none' : 'auto'}>
+        <RoutePickerMap
+          key={mapKey}
+          points={points}
+          onChange={setPoints}
+        />
+      </View>
+
+      <Text style={styles.label}>Route name</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Northern Trail"
+        placeholderTextColor="#78909C"
+        value={routeName}
+        onChangeText={setRouteName}
+        editable={!loading}
+      />
+
+      <Text style={styles.label}>Assign ranger</Text>
+
+      {fetchingRangers ? (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator color="#1565C0" />
+          <Text style={styles.subtitle}>Loading rangers...</Text>
+        </View>
+      ) : rangerError ? (
+        <View>
+          <Text style={styles.errorText}>{rangerError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => setReloadRangers((value) => value + 1)}
+          >
+            <Text style={styles.retryText}>Retry Loading Rangers</Text>
+          </TouchableOpacity>
+        </View>
+      ) : rangers.length === 0 ? (
+        <Text style={styles.notice}>
+          No ranger accounts found.
+        </Text>
+      ) : (
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={rangerUid}
+            enabled={!loading}
+            onValueChange={(value: string) => setRangerUid(value)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select a ranger" value="" />
+            {rangers.map((ranger) => (
+              <Picker.Item
+                key={ranger.uid}
+                label={ranger.displayName}
+                value={ranger.uid}
+              />
+            ))}
+          </Picker>
+        </View>
+      )}
+
+      <Text style={styles.label}>Patrol date</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="YYYY-MM-DD"
+        placeholderTextColor="#78909C"
+        value={patrolDate}
+        onChangeText={setPatrolDate}
+        editable={!loading}
+        autoCorrect={false}
+        autoCapitalize="none"
+        maxLength={10}
+      />
+
+      <Text style={styles.label}>Estimated duration (minutes)</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="120"
+        placeholderTextColor="#78909C"
+        value={duration}
+        onChangeText={setDuration}
+        editable={!loading}
+        keyboardType="number-pad"
+      />
+
+      <View style={styles.summary}>
+        <Text style={styles.summaryText}>
+          {points.length} points
+          {'\n'}Approx. distance: {calculateDistance(points).toFixed(2)} km
+        </Text>
+      </View>
+
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : null}
+
+      {success ? (
+        <Text style={styles.successText}>{success}</Text>
+      ) : null}
+
+      <TouchableOpacity
+        style={[
+          styles.assignButton,
+          (loading || fetchingRangers || !!rangerError || !rangers.length) &&
+          styles.disabled,
+        ]}
+        onPress={handleAssign}
+        disabled={
+          loading ||
+          fetchingRangers ||
+          !!rangerError ||
+          !rangers.length
+        }
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.assignText}>Assign Patrol</Text>
+        )}
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0D47A1',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#546E7A',
+    lineHeight: 21,
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  label: {
+    color: '#546E7A',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CFD8DC',
+    backgroundColor: '#FFFFFF',
+    color: '#263238',
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#CFD8DC',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  picker: {
+    width: '100%',
+    color: '#263238',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingBox: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  notice: {
+    color: '#F57F17',
+    lineHeight: 22,
+  },
+  retryButton: {
+    paddingVertical: 14,
+  },
+  retryText: {
+    color: '#1565C0',
+    fontWeight: '600',
+  },
+  summary: {
+    backgroundColor: '#E3F2FD',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  summaryText: {
+    color: '#1565C0',
+    fontWeight: '600',
+    lineHeight: 24,
+  },
+  errorText: {
+    color: '#D32F2F',
+    lineHeight: 22,
+    marginTop: 12,
+  },
+  successText: {
+    color: '#2E7D32',
+    lineHeight: 22,
+    marginTop: 12,
+  },
+  assignButton: {
+    backgroundColor: '#1565C0',
+    borderRadius: 12,
+    padding: 17,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  assignText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+});
