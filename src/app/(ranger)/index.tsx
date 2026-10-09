@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,8 @@ import { AppTheme } from '../../theme';
 import { auth } from '../../services/firebase';
 import { useTheme } from '../../context/ThemeContext';
 import { SyncService, SyncStatus } from '../../services/syncService';
+import { useRangerIncidents } from '../../hooks/useRangerIncidents';
+import { IncidentCard } from '../../components/incident/IncidentCard';
 
 const bannerImage = require('../../assets/banner.jpg');
 
@@ -17,6 +19,8 @@ export default function RangerDashboard() {
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('IDLE');
   const [pendingCount, setPendingCount] = useState(0);
+  const { incidents, loading: incidentsLoading } = useRangerIncidents();
+  const recentIncidents = incidents.slice(0, 3);
 
   useEffect(() => {
     SyncService.init();
@@ -162,13 +166,24 @@ export default function RangerDashboard() {
                 <Ionicons name="document-text" size={20} color={theme.primary} style={{ marginRight: 6 }} />
                 <Text style={[styles.recentSectionTitle, { color: theme.textPrimary }]}>Recent Incidents</Text>
               </View>
-              <TouchableOpacity style={styles.viewAllBtn}>
+              <TouchableOpacity style={styles.viewAllBtn} onPress={() => router.push('/(ranger)/my-incidents')}>
                 <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
                 <Ionicons name="arrow-forward" size={14} color={theme.primary} style={{ marginLeft: 2 }} />
               </TouchableOpacity>
             </View>
 
-            {/* Empty State Box */}
+            {incidentsLoading ? (
+              <ActivityIndicator color={theme.primary} style={{ paddingVertical: AppTheme.spacing.lg }} />
+            ) : recentIncidents.length > 0 ? (
+              recentIncidents.map((incident) => (
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  onPress={() => router.push('/(ranger)/my-incidents')}
+                />
+              ))
+            ) : (
+            /* Empty State Box */
             <View style={[styles.emptyCard, { backgroundColor: theme.emptyCardBg, borderColor: isDarkMode ? '#334155' : '#B0BEC5' }]}>
               <View style={[styles.emptyIconBg, { backgroundColor: isDarkMode ? '#334155' : '#E3F2FD' }]}>
                 <Ionicons name="document-text-outline" size={32} color={isDarkMode ? '#94A3B8' : '#546E7A'} />
@@ -178,6 +193,7 @@ export default function RangerDashboard() {
                 Once you report an incident, it will appear here for easy tracking and management.
               </Text>
             </View>
+            )}
           </View>
 
         </View>
