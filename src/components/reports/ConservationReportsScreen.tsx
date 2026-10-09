@@ -168,7 +168,7 @@ function ResultPanel({
       <View style={styles.resultHeading}>
         <View style={styles.resultHeadingText}>
           <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>{REPORT_DEFINITIONS[kind].title}</Text>
-          <Text style={[styles.resultRange, { color: theme.textSecondary }]}>{formatDate(report.startDate)} – {formatDate(report.endDate)}</Text>
+          <Text style={[styles.resultRange, { color: theme.textSecondary }]}>{formatDate(report.startDate)} â€“ {formatDate(report.endDate)}</Text>
         </View>
         <View style={styles.generatedMark}>
           <Ionicons name="checkmark-circle" size={17} color={COLORS.green} />
@@ -190,7 +190,7 @@ function ResultPanel({
         </View>
       )}
 
-      <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+      <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Data availability</Text>
         <SourceStateRow source={report.sourceResults.incidents} label="Wildlife incidents" theme={theme} />
         <SourceStateRow source={report.sourceResults.patrols} label="Patrol assignments" theme={theme} />
@@ -198,7 +198,7 @@ function ResultPanel({
       </View>
 
       {showIncidents && report.sourceResults.incidents.state === 'available' && (
-        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Incident trends</Text>
           <View style={styles.metricRow}>
             <Metric label="Total incidents" value={String(report.incidents.total)} theme={theme} />
@@ -212,7 +212,7 @@ function ResultPanel({
       )}
 
       {showPoaching && report.sourceResults.incidents.state === 'available' && (
-        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Potential poaching hotspots</Text>
           <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Candidate incidents use matching types such as snare, trap, or illegal activity. A hotspot requires at least two located reports in the same coarse grid cell.</Text>
           <View style={styles.metricRow}>
@@ -233,13 +233,13 @@ function ResultPanel({
       )}
 
       {showPatrols && report.sourceResults.patrols.state === 'available' && (
-        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Patrol coverage</Text>
           <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Assignment progress; GPS trail coverage cannot be calculated because recorded GPS points remain on ranger devices.</Text>
           <View style={styles.metricRow}>
             <Metric label="Assigned" value={String(report.patrols.assigned)} theme={theme} />
             <Metric label="Completed" value={String(report.patrols.completed)} theme={theme} />
-            <Metric label="Completion" value={report.patrols.completionPercent === null ? '—' : `${report.patrols.completionPercent}%`} theme={theme} />
+            <Metric label="Completion" value={report.patrols.completionPercent === null ? 'â€”' : `${report.patrols.completionPercent}%`} theme={theme} />
           </View>
           <Text style={[styles.plannedDistance, { color: theme.textPrimary }]}>{report.patrols.plannedDistanceKm.toFixed(1)} km planned route distance</Text>
           {report.patrols.routeProgress.map((route) => (
@@ -252,7 +252,7 @@ function ResultPanel({
       )}
 
       {showConflicts && report.sourceResults.conflicts.state === 'available' && (
-        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Human-wildlife conflict trends</Text>
           <View style={styles.metricRow}>
             <Metric label="Community reports" value={String(report.conflicts.total)} theme={theme} />
@@ -345,7 +345,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   async function shareReport() {
     if (!report) return;
     const message = [
-      `${REPORT_DEFINITIONS[kind].title}: ${formatDate(report.startDate)} – ${formatDate(report.endDate)}`,
+      `${REPORT_DEFINITIONS[kind].title}: ${formatDate(report.startDate)} â€“ ${formatDate(report.endDate)}`,
       `Incidents: ${report.incidents.total}`,
       `Potential poaching hotspots: ${report.poaching.hotspots.length}`,
       `Patrol assignments completed: ${report.patrols.completed}/${report.patrols.assigned}`,
@@ -365,7 +365,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         <View style={styles.header}>
           <View style={styles.headerIcon}><Ionicons name="analytics-outline" size={23} color={COLORS.white} /></View>
           <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
+            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE Â· {audience.toUpperCase()}</Text>
             <Text style={styles.headerTitle}>Conservation reports</Text>
             <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
           </View>
@@ -443,7 +443,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'idle' && (
-          <View style={[styles.stateCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <View style={styles.stateIcon}><Ionicons name="document-text-outline" size={25} color={COLORS.primary} /></View>
             <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>Choose report criteria</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>Select an analysis and valid date range to generate the available conservation report.</Text>
@@ -451,7 +451,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'loading' && (
-          <View style={[styles.stateCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={[styles.stateTitle, styles.loadingTitle, { color: theme.textPrimary }]}>Generating conservation analysis</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>Retrieving relevant records for the selected period.</Text>
@@ -472,7 +472,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'error' && (
-          <View style={[styles.stateCard, styles.errorCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+          <View style={[styles.stateCard, styles.errorCard, { backgroundColor: theme.cardBg }]}>
             <View style={[styles.stateIcon, styles.errorIcon]}><Ionicons name="cloud-offline-outline" size={25} color={COLORS.red} /></View>
             <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>Report generation failed</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>{errorMessage}</Text>
@@ -483,7 +483,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'empty' && (
-          <View style={[styles.stateCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <View style={styles.stateIcon}><Ionicons name="file-tray-outline" size={25} color={COLORS.slate} /></View>
             <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>No relevant data found</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>No connected conservation data exists for this report period.</Text>
@@ -611,4 +611,3 @@ const styles = StyleSheet.create({
   backButton: { minHeight: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 6, backgroundColor: COLORS.lightBlue },
   backText: { color: COLORS.darkBlue, fontSize: 12, fontWeight: '700' },
 });
-
