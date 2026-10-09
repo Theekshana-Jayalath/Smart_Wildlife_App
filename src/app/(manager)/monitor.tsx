@@ -102,7 +102,7 @@ export default function MonitorScreen() {
             var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
             
             if (r.isSOS) {
-              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS('" + r.id + "')">Resolve SOS</button>';
+              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS(\'' + r.id + '\')">Resolve SOS</button>';
             }
             
             marker.bindPopup(popupContent);
