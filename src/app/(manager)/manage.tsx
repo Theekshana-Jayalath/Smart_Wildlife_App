@@ -64,7 +64,7 @@ export default function ManageScreen() {
 
         {/* 1. Manage Danger Zones */}
         <TouchableOpacity 
-          style={styles.menuCard} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
           onPress={() => router.push('/(manager)/danger-zones')}
           activeOpacity={0.8}
         >
@@ -80,7 +80,7 @@ export default function ManageScreen() {
 
         {/* 2. Manage Animals (IoT Collars) */}
         <TouchableOpacity 
-          style={styles.menuCard} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
           onPress={() => router.push('/(manager)/manage-animals')}
           activeOpacity={0.8}
         >
@@ -96,7 +96,7 @@ export default function ManageScreen() {
 
         {/* 3. Manage Rangers */}
         <TouchableOpacity 
-          style={styles.menuCard} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
           onPress={() => {}}
           activeOpacity={0.8}
         >
@@ -154,11 +154,12 @@ const styles = StyleSheet.create({
   resultTitle: { fontSize: 18, fontWeight: '800', color: '#1A202C' },
   resultRange: { fontSize: 12, marginTop: 3, color: COLORS.slate },
 
-  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: theme.cardBg, marginBottom: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: '#FFFFFF', marginBottom: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
   iconBox: { width: 50, height: 50, borderRadius: 12, backgroundColor: COLORS.lightBlue, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   menuTextContainer: { flex: 1, paddingRight: 10 },
   menuTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 5 },
   menuDesc: { fontSize: 12, color: COLORS.slate, lineHeight: 17 }
 });
+
 
 

@@ -178,7 +178,7 @@ export default function AssignScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView
-        style={styles.screen}
+        style={[styles.screen, { backgroundColor: theme.cardBg }]}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
 
   screen: {
     flex: 1,
-    backgroundColor: theme.cardBg,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     padding: 16,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#CFD8DC',
-    backgroundColor: theme.cardBg,
+    backgroundColor: '#FFFFFF',
     color: '#263238',
     borderRadius: 10,
     padding: 14,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   picker: {
     width: '100%',
     color: '#263238',
-    backgroundColor: theme.cardBg,
+    backgroundColor: '#FFFFFF',
   },
   loadingBox: {
     padding: 16,
@@ -438,5 +438,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+
 
 
