@@ -36,7 +36,7 @@ function isValidDate(value: string): boolean {
 const bannerImage = require('../../assets/banner.jpg');
 
 export default function AssignScreen() {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
   const [points, setPoints] = useState<RoutePoint[]>([]);
   const [routeName, setRouteName] = useState('');
   const [rangerUid, setRangerUid] = useState('');
@@ -176,7 +176,7 @@ export default function AssignScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView
         style={styles.screen}
         contentContainerStyle={styles.content}
@@ -199,7 +199,7 @@ export default function AssignScreen() {
           </View>
         </View>
         
-        <Text style={styles.title}>Plan a patrol</Text>
+        <Text style={[styles.title, { color: theme.textPrimary }]}>Plan a patrol</Text>
         <Text style={styles.subtitle}>
           Choose points on the map, then assign a ranger.
         </Text>
@@ -212,7 +212,7 @@ export default function AssignScreen() {
         />
       </View>
 
-      <Text style={styles.label}>Route name</Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>Route name</Text>
       <TextInput
         style={styles.input}
         placeholder="Northern Trail"
@@ -222,7 +222,7 @@ export default function AssignScreen() {
         editable={!loading}
       />
 
-      <Text style={styles.label}>Assign ranger</Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>Assign ranger</Text>
 
       {fetchingRangers ? (
         <View style={styles.loadingBox}>
@@ -263,7 +263,7 @@ export default function AssignScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>Patrol date</Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>Patrol date</Text>
       <TextInput
         style={styles.input}
         placeholder="YYYY-MM-DD"
@@ -276,7 +276,7 @@ export default function AssignScreen() {
         maxLength={10}
       />
 
-      <Text style={styles.label}>Estimated duration (minutes)</Text>
+      <Text style={[styles.label, { color: theme.textPrimary }]}>Estimated duration (minutes)</Text>
       <TextInput
         style={styles.input}
         placeholder="120"
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
 
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.cardBg,
   },
   content: {
     padding: 16,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#CFD8DC',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.cardBg,
     color: '#263238',
     borderRadius: 10,
     padding: 14,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   picker: {
     width: '100%',
     color: '#263238',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.cardBg,
   },
   loadingBox: {
     padding: 16,
@@ -438,3 +438,5 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+
+

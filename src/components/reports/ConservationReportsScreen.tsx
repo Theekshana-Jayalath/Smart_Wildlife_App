@@ -329,29 +329,17 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
-  header: {
-    backgroundColor: COLORS.darkBlue,
-    borderRadius: 8,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 13,
-  },
-  headerCopy: { flex: 1 },
+  bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
+  bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+  bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
+  headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  headerCopy: { flex: 1, justifyContent: 'center' },
   headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   headerTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', marginTop: 4, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   headerSubtitle: { color: '#E3F2FD', fontSize: 13, marginTop: 4, fontWeight: '500' },
+  darkToggleBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   filterSection: {
-    backgroundColor: COLORS.white,
+    backgroundColor: theme.cardBg,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -368,7 +356,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    backgroundColor: COLORS.white,
+    backgroundColor: theme.cardBg,
     paddingHorizontal: 11,
   },
   typeOptionSelected: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
@@ -484,3 +472,5 @@ const styles = StyleSheet.create({
   areaCount: { fontSize: 11, fontWeight: '700' },
   generatedAt: { fontSize: 10, textAlign: 'right', marginTop: -3 },
 });
+
+

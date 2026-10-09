@@ -24,7 +24,7 @@ export default function MonitorScreen() {
   const [activeTab, setActiveTab] = useState('animals');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const router = useRouter();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
 
   const handleBroadcastSMS = () => {
     setIsBroadcasting(true);
@@ -38,7 +38,7 @@ export default function MonitorScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
         {/* Banner Image matching Manage screen */}
@@ -61,7 +61,7 @@ export default function MonitorScreen() {
 
         {/* Tab Switcher matching the flat styling */}
         <View style={styles.filterSection}>
-          <Text style={styles.fieldLabel}>Monitor target</Text>
+          <Text style={[styles.fieldLabel, { color: theme.textPrimary }]}>Monitor target</Text>
           <View style={styles.periodOptions}>
             <TouchableOpacity
               onPress={() => setActiveTab('rangers')}
@@ -86,7 +86,7 @@ export default function MonitorScreen() {
             <View style={styles.stateIcon}>
               <Ionicons name="people-outline" size={25} color={COLORS.slate} />
             </View>
-            <Text style={styles.stateTitle}>Ranger Tracking</Text>
+            <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>Ranger Tracking</Text>
             <Text style={styles.stateText}>Live ranger tracking map will appear here.</Text>
           </View>
         ) : (
@@ -94,7 +94,7 @@ export default function MonitorScreen() {
             
             <View style={styles.resultHeading}>
               <View style={styles.resultHeadingText}>
-                <Text style={styles.resultTitle}>Live Alerts Inbox</Text>
+                <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>Live Alerts Inbox</Text>
                 <Text style={styles.resultRange}>Showing high-risk notifications</Text>
               </View>
               <TouchableOpacity onPress={() => router.push('/(manager)/all-alerts')}>
@@ -108,7 +108,7 @@ export default function MonitorScreen() {
                 <Ionicons name="warning" size={20} color={COLORS.red} />
                 <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: E-024</Text>
               </View>
-              <Text style={styles.alertDesc}>Elephant detected 1km from Village Boundary!</Text>
+              <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>Elephant detected 1km from Village Boundary!</Text>
               
               <Text style={styles.alertTime}>2 mins ago (Ack: Ranger #03)</Text>
 
@@ -132,7 +132,7 @@ export default function MonitorScreen() {
                 <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.yellow} />
                 <Text style={[styles.cardTitle, { color: COLORS.yellow, marginLeft: 8 }]}>COMMUNITY REPORT</Text>
               </View>
-              <Text style={styles.alertDesc}>"Elephant spotted eating crops near North Farm."</Text>
+              <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>"Elephant spotted eating crops near North Farm."</Text>
               
               <Text style={styles.alertTime}>SMS: +94 77 *** ****</Text>
 
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: COLORS.white, fontSize: 24, fontWeight: '800', marginTop: 4, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   headerSubtitle: { color: '#E3F2FD', fontSize: 13, marginTop: 4, fontWeight: '500' },
   
-  filterSection: { backgroundColor: COLORS.white, borderRadius: 12, padding: 15, marginBottom: 16, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  filterSection: { backgroundColor: theme.cardBg, borderRadius: 12, padding: 15, marginBottom: 16, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
   fieldLabel: { fontSize: 14, fontWeight: '700', marginBottom: 9, color: '#000' },
   periodOptions: { flexDirection: 'row', gap: 8 },
   periodOption: { flex: 1, minHeight: 39, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F8FB', borderWidth: 1, borderColor: COLORS.border },
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   periodText: { color: COLORS.slate, fontSize: 12, fontWeight: '600' },
   periodTextSelected: { color: COLORS.darkBlue },
 
-  stateCard: { minHeight: 190, alignItems: 'center', justifyContent: 'center', padding: 22, borderRadius: 12, backgroundColor: COLORS.white, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  stateCard: { minHeight: 190, alignItems: 'center', justifyContent: 'center', padding: 22, borderRadius: 12, backgroundColor: theme.cardBg, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
   stateIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.lightBlue, alignItems: 'center', justifyContent: 'center', marginBottom: 11 },
   stateTitle: { fontSize: 15, fontWeight: '700', textAlign: 'center', color: '#000' },
   stateText: { fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 5, color: COLORS.slate },
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   resultRange: { fontSize: 11, marginTop: 3, color: COLORS.slate },
   viewAllText: { color: COLORS.primary, fontWeight: '700', fontSize: 13 },
 
-  sectionCard: { borderRadius: 12, padding: 16, marginBottom: 14, backgroundColor: COLORS.white, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  sectionCard: { borderRadius: 12, padding: 16, marginBottom: 14, backgroundColor: theme.cardBg, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
   alertHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   cardTitle: { fontSize: 14, fontWeight: '700' },
   alertDesc: { fontSize: 13, color: '#333', marginBottom: 12, lineHeight: 20 },
@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
   btnSecondaryText: { color: COLORS.darkBlue, fontSize: 13, fontWeight: '700' },
 });
+
 
 
 

@@ -24,7 +24,7 @@ const COLORS = {
 
 export default function ManageScreen() {
   const router = useRouter();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -36,7 +36,7 @@ export default function ManageScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
         {/* Banner Image */}
@@ -58,7 +58,7 @@ export default function ManageScreen() {
         </View>
 
         <View style={styles.resultHeading}>
-          <Text style={styles.resultTitle}>Management Tools</Text>
+          <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>Management Tools</Text>
           <Text style={styles.resultRange}>Select a module to configure</Text>
         </View>
 
@@ -72,7 +72,7 @@ export default function ManageScreen() {
             <Ionicons name="map-outline" size={24} color={COLORS.red} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={styles.menuTitle}>Danger Zones (Geofences)</Text>
+            <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>Danger Zones (Geofences)</Text>
             <Text style={styles.menuDesc}>Draw and edit virtual village boundaries on the map</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.slate} />
@@ -88,7 +88,7 @@ export default function ManageScreen() {
             <Ionicons name="hardware-chip-outline" size={24} color={COLORS.primary} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={styles.menuTitle}>IoT Collars & Animals</Text>
+            <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>IoT Collars & Animals</Text>
             <Text style={styles.menuDesc}>Register new wildlife and assign GPS tracking collars</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.slate} />
@@ -104,7 +104,7 @@ export default function ManageScreen() {
             <Ionicons name="shield-half-outline" size={24} color={COLORS.green} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={styles.menuTitle}>Field Rangers</Text>
+            <Text style={[styles.menuTitle, { color: theme.textPrimary }]}>Field Rangers</Text>
             <Text style={styles.menuDesc}>Add new personnel, roles, and assign patrol sectors</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.slate} />
@@ -112,7 +112,7 @@ export default function ManageScreen() {
 
         {/* Account Settings Section */}
         <View style={[styles.resultHeading, { marginTop: 15 }]}>
-          <Text style={styles.resultTitle}>Account</Text>
+          <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>Account</Text>
         </View>
         
         <TouchableOpacity 
@@ -154,10 +154,11 @@ const styles = StyleSheet.create({
   resultTitle: { fontSize: 18, fontWeight: '800', color: '#1A202C' },
   resultRange: { fontSize: 12, marginTop: 3, color: COLORS.slate },
 
-  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: COLORS.white, marginBottom: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: theme.cardBg, marginBottom: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
   iconBox: { width: 50, height: 50, borderRadius: 12, backgroundColor: COLORS.lightBlue, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   menuTextContainer: { flex: 1, paddingRight: 10 },
   menuTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 5 },
   menuDesc: { fontSize: 12, color: COLORS.slate, lineHeight: 17 }
 });
+
 
