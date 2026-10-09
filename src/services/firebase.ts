@@ -1,4 +1,4 @@
-﻿import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 // @ts-ignore
 import { initializeAuth, getReactNativePersistence, getAuth, Auth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -6,7 +6,7 @@ import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const cleanEnv = (val) => val ? val.trim().replace(/^["']|["']$/g, '') : '';
+const cleanEnv = (val?: string) => val ? val.trim().replace(/^["']|["']$/g, '') : '';
 
 const firebaseConfig = {
   apiKey: cleanEnv(process.env.EXPO_PUBLIC_FIREBASE_API_KEY),
@@ -19,7 +19,7 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-let auth;
+let auth: Auth;
 try {
   if (Platform.OS === 'web') {
     auth = getAuth(app);
@@ -37,7 +37,7 @@ try {
       auth = getAuth(app);
     }
   }
-} catch (error) {
+} catch (error: any) {
   if (error.code === 'auth/already-initialized') {
     auth = getAuth(app);
   } else {

@@ -123,16 +123,6 @@ export default function MonitorScreen() {
           
           // Initial draw
           window.updateRangers(${JSON.stringify(rangers)});
-
-            
-            var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
-            
-            var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
-              marker.bindPopup(popupContent);
-          });
-          
-          ));
-          }
       </script>
   </body>
   </html>
@@ -252,39 +242,46 @@ export default function MonitorScreen() {
                 <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
                 <Text style={{color: theme.textSecondary, marginTop: 10}}>No active alerts today.</Text>
               </View>
-            ) : incidents.map(alert => (
-              <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
-                <View style={styles.alertHeader}>
-                  <Ionicons name="warning" size={20} color={COLORS.red} />
-                  <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {alert.species.toUpperCase()}</Text>
-                </View>
-                <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{alert.animalName} breached {alert.zoneName}!</Text>
-                
-                <Text style={styles.alertTime}>{alert.time}</Text>
+            ) : incidents.map(alert => {
+              const speciesText = (alert.species || alert.incidentType || 'INCIDENT').toUpperCase();
+              const animalText = alert.animalName || (alert.incidentType ? `Incident (${alert.incidentType})` : 'Wildlife Event');
+              const zoneText = alert.zoneName || 'Monitored Sector';
+              const timeText = alert.time || 'Recently';
 
-                <View style={styles.actionRow}>
-                  <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
-                    <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                      style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
-                      onPress={() => handleBroadcastSMS(alert.id, alert.zoneName)} 
-                      disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
-                    >
-                      {broadcastingIds[alert.id] ? (
-                        <ActivityIndicator size="small" color={COLORS.primary} />
-                      ) : broadcastedIds[alert.id] ? (
-                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                          <Ionicons name="checkmark-circle" size={16} color="#2E7D32" style={{marginRight: 4}} />
-                          <Text style={[styles.btnSecondaryText, { color: '#2E7D32' }]}>Sent</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
-                      )}
+              return (
+                <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
+                  <View style={styles.alertHeader}>
+                    <Ionicons name="warning" size={20} color={COLORS.red} />
+                    <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {speciesText}</Text>
+                  </View>
+                  <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{animalText} reported in {zoneText}!</Text>
+                  
+                  <Text style={styles.alertTime}>{timeText}</Text>
+
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
+                      <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
+                        onPress={() => handleBroadcastSMS(alert.id, zoneText)} 
+                        disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
+                      >
+                        {broadcastingIds[alert.id] ? (
+                          <ActivityIndicator size="small" color={COLORS.primary} />
+                        ) : broadcastedIds[alert.id] ? (
+                          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Ionicons name="checkmark-circle" size={16} color="#2E7D32" style={{marginRight: 4}} />
+                            <Text style={[styles.btnSecondaryText, { color: '#2E7D32' }]}>Sent</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
+                        )}
+                      </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
 </View>
         )}
       </ScrollView>
