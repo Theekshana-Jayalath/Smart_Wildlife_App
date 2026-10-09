@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
+
+const bannerImage = require('../../assets/banner.jpg');
 
 // Exact matching colors from Reports UI
 const COLORS = {
@@ -35,15 +37,18 @@ export default function ManageScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
-        {/* Header matching Reports screen */}
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="settings-outline" size={23} color={COLORS.white} />
-          </View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>SYSTEM CONTROLS Â· MANAGER</Text>
-            <Text style={styles.headerTitle}>Park Management</Text>
-            <Text style={styles.headerSubtitle}>Configure resources and boundaries</Text>
+        {/* Banner Image */}
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="settings-outline" size={26} color={COLORS.white} />
+            </View>
+            <View style={styles.headerCopy}>
+              <Text style={styles.headerEyebrow}>SYSTEM CONTROLS Â· MANAGER</Text>
+              <Text style={styles.headerTitle}>Park Management</Text>
+              <Text style={styles.headerSubtitle}>Configure resources and boundaries</Text>
+            </View>
           </View>
         </View>
 
@@ -106,7 +111,7 @@ export default function ManageScreen() {
         </View>
         
         <TouchableOpacity 
-          style={[styles.menuCard, { borderColor: '#FFCDD2', backgroundColor: '#FFEBEE' }]} 
+          style={[styles.menuCard, { borderColor: '#FFCDD2', backgroundColor: '#FFEBEE', elevation: 0, shadowOpacity: 0 }]} 
           onPress={handleLogout}
           activeOpacity={0.8}
         >
@@ -126,23 +131,26 @@ export default function ManageScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.white },
-  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
+  safeArea: { flex: 1, backgroundColor: '#F8F9FA' }, // Light background so shadows stand out
+  content: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 30 },
   
-  header: { backgroundColor: COLORS.darkBlue, borderRadius: 8, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  headerIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center', marginRight: 13 },
-  headerCopy: { flex: 1 },
-  headerEyebrow: { color: '#BBDEFB', fontSize: 9, fontWeight: '700' },
-  headerTitle: { color: COLORS.white, fontSize: 21, fontWeight: '700', marginTop: 4 },
-  headerSubtitle: { color: '#E3F2FD', fontSize: 12, marginTop: 3 },
+  bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
+  bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+  bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
   
-  resultHeading: { paddingVertical: 10, marginBottom: 5 },
-  resultTitle: { fontSize: 17, fontWeight: '700', color: '#000' },
-  resultRange: { fontSize: 11, marginTop: 3, color: COLORS.slate },
+  headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  headerCopy: { flex: 1, justifyContent: 'center' },
+  headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  headerTitle: { color: COLORS.white, fontSize: 24, fontWeight: '800', marginTop: 4, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  headerSubtitle: { color: '#E3F2FD', fontSize: 13, marginTop: 4, fontWeight: '500' },
+  
+  resultHeading: { paddingVertical: 10, marginBottom: 5, paddingHorizontal: 4 },
+  resultTitle: { fontSize: 18, fontWeight: '800', color: '#1A202C' },
+  resultRange: { fontSize: 12, marginTop: 3, color: COLORS.slate },
 
-  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.white, marginBottom: 12 },
-  iconBox: { width: 46, height: 46, borderRadius: 6, backgroundColor: COLORS.lightBlue, alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  menuCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: COLORS.white, marginBottom: 14, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  iconBox: { width: 50, height: 50, borderRadius: 12, backgroundColor: COLORS.lightBlue, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   menuTextContainer: { flex: 1, paddingRight: 10 },
-  menuTitle: { fontSize: 14, fontWeight: '700', color: '#000', marginBottom: 4 },
-  menuDesc: { fontSize: 11, color: COLORS.slate, lineHeight: 16 }
+  menuTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 5 },
+  menuDesc: { fontSize: 12, color: COLORS.slate, lineHeight: 17 }
 });

@@ -27,12 +27,12 @@ export default function TabLayout() {
         options={{ title: 'Monitor', tabBarIcon: ({ color, size }) => <Ionicons name="map-outline" size={size} color={color} /> }}
       />
       <Tabs.Screen
-        name="manage"
-        options={{ title: 'Manage', tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
-      />
-      <Tabs.Screen
         name="reports"
         options={{ title: 'Reports', tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart-outline" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="manage"
+        options={{ title: 'Manage', tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
       />
       {/* Hidden Screens (Not in Bottom Tab Bar) */}
       <Tabs.Screen
