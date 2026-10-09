@@ -106,25 +106,25 @@ function SummaryResults({ summary, theme }: { summary: ReportSummary; theme: Ret
       )}
 
       <View style={styles.metricRow}>
-        <View style={[styles.metricCard, { backgroundColor: '#FFFFFF' }]}>
+        <View style={[styles.metricCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.metricLabel, { color: theme.textSecondary }]}>Records found</Text>
           <Text style={[styles.metricValue, { color: theme.textPrimary }]}>{summary.total}</Text>
           <Text style={[styles.metricHint, { color: theme.textSecondary }]}>{summary.periodDays}-day period</Text>
         </View>
-        <View style={[styles.metricCard, { backgroundColor: '#FFFFFF' }]}>
+        <View style={[styles.metricCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.metricLabel, { color: theme.textSecondary }]}>Weekly average</Text>
           <Text style={[styles.metricValue, { color: theme.textPrimary }]}>{summary.averagePerWeek}</Text>
           <Text style={[styles.metricHint, { color: theme.textSecondary }]}>records per 7 days</Text>
         </View>
       </View>
 
-      <View style={[styles.sectionCard, { backgroundColor: '#FFFFFF' }]}>
+      <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Activity over time</Text>
         <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Records by period</Text>
         <TrendChart summary={summary} textColor={theme.textSecondary} />
       </View>
 
-      <View style={[styles.sectionCard, { backgroundColor: '#FFFFFF' }]}>
+      <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>By category</Text>
         {categoryRows.length > 0 ? (
           <CountBars rows={categoryRows} color={COLORS.primary} textColor={theme.textSecondary} />
@@ -134,14 +134,14 @@ function SummaryResults({ summary, theme }: { summary: ReportSummary; theme: Ret
       </View>
 
       {statusRows.length > 0 && (
-        <View style={[styles.sectionCard, { backgroundColor: '#FFFFFF' }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>By status</Text>
           <CountBars rows={statusRows} color={COLORS.green} textColor={theme.textSecondary} />
         </View>
       )}
 
       {summary.areas.length > 0 && (
-        <View style={[styles.sectionCard, { backgroundColor: '#FFFFFF' }]}>
+        <View style={[styles.sectionCard, { backgroundColor: theme.cardBg }]}>
           <View style={styles.areaHeading}>
             <View>
               <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Reported areas</Text>
@@ -277,7 +277,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         </View>
 
         {viewState === 'idle' && (
-          <View style={[styles.stateCard, { backgroundColor: '#FFFFFF' }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <View style={styles.stateIcon}>
               <Ionicons name="document-text-outline" size={25} color={COLORS.primary} />
             </View>
@@ -287,7 +287,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'loading' && (
-          <View style={[styles.stateCard, { backgroundColor: '#FFFFFF' }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={[styles.stateTitle, styles.loadingTitle, { color: theme.textPrimary }]}>Analysing park records</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>Fetching records and preparing the selected report.</Text>
@@ -295,7 +295,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'error' && (
-          <View style={[styles.stateCard, styles.errorCard, { backgroundColor: '#FFFFFF' }]}>
+          <View style={[styles.stateCard, styles.errorCard, { backgroundColor: theme.cardBg }]}>
             <View style={[styles.stateIcon, styles.errorIcon]}>
               <Ionicons name="cloud-offline-outline" size={25} color={COLORS.red} />
             </View>
@@ -309,7 +309,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
         )}
 
         {viewState === 'empty' && (
-          <View style={[styles.stateCard, { backgroundColor: '#FFFFFF' }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
             <View style={styles.stateIcon}>
               <Ionicons name="file-tray-outline" size={25} color={COLORS.slate} />
             </View>
@@ -472,6 +472,8 @@ const styles = StyleSheet.create({
   areaCount: { fontSize: 11, fontWeight: '700' },
   generatedAt: { fontSize: 10, textAlign: 'right', marginTop: -3 },
 });
+
+
 
 
 

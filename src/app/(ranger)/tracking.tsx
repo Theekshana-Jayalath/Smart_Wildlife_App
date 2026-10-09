@@ -169,7 +169,7 @@ export default function TrackingScreen() {
         <View style={styles.updatesContainer}>
           <View style={styles.updatesHeader}>
             <Text style={styles.updatesTitle}>Recent Updates</Text>
-            <TouchableOpacity><Text style={styles.viewAllText}>View All ></Text></TouchableOpacity>
+            <TouchableOpacity><Text style={styles.viewAllText}>View All {'>'}</Text></TouchableOpacity>
           </View>
 
           {/* Update Item 1 */}
@@ -325,3 +325,4 @@ const styles = StyleSheet.create({
   btnSecondary: { backgroundColor: '#fff', width: '100%', paddingVertical: 14, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#1565C0' },
   btnSecondaryText: { color: '#1565C0', fontSize: 14, fontWeight: 'bold' },
 });
+
