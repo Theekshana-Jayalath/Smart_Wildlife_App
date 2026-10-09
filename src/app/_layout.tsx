@@ -8,6 +8,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(ranger)" />
         <Stack.Screen name="(manager)" />
+        <Stack.Screen name="(researcher)" />
       </Stack>
     </ThemeProvider>
   );
