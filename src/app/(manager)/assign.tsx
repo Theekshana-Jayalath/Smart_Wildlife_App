@@ -214,7 +214,7 @@ export default function AssignScreen() {
 
       <Text style={[styles.label, { color: theme.textPrimary }]}>Route name</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.inputBorder, backgroundColor: theme.inputBg, color: theme.inputText }]}
         placeholder="Northern Trail"
         placeholderTextColor="#78909C"
         value={routeName}
@@ -244,7 +244,7 @@ export default function AssignScreen() {
           No ranger accounts found.
         </Text>
       ) : (
-        <View style={styles.pickerContainer}>
+        <View style={[styles.pickerContainer, { borderColor: theme.inputBorder, backgroundColor: theme.inputBg }]}>
           <Picker
             selectedValue={rangerUid}
             enabled={!loading}
@@ -265,7 +265,7 @@ export default function AssignScreen() {
 
       <Text style={[styles.label, { color: theme.textPrimary }]}>Patrol date</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.inputBorder, backgroundColor: theme.inputBg, color: theme.inputText }]}
         placeholder="YYYY-MM-DD"
         placeholderTextColor="#78909C"
         value={patrolDate}
@@ -278,7 +278,7 @@ export default function AssignScreen() {
 
       <Text style={[styles.label, { color: theme.textPrimary }]}>Estimated duration (minutes)</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.inputBorder, backgroundColor: theme.inputBg, color: theme.inputText }]}
         placeholder="120"
         placeholderTextColor="#78909C"
         value={duration}
@@ -438,6 +438,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+
+
+
 
 
 

@@ -69,7 +69,7 @@ export default function ManagerDashboard() {
 
         <View style={styles.metricsGrid}>
           {metrics.map((metric) => (
-            <View key={metric.label} style={[styles.metricCard, { backgroundColor: theme.cardBg }]}>
+            <View key={metric.label} style={[styles.metricCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
               <View style={styles.metricIcon}>
                 <Ionicons name={metric.icon} size={19} color="#1565C0" />
               </View>
@@ -96,7 +96,7 @@ export default function ManagerDashboard() {
               accessibilityLabel={action.title}
               activeOpacity={0.8}
               onPress={() => router.navigate(action.route)}
-              style={[styles.actionRow, { backgroundColor: theme.cardBg }]}
+              style={[styles.actionRow, { backgroundColor: theme.cardBg, borderColor: theme.border }]}
             >
               <View style={[styles.actionIcon, { backgroundColor: `${action.color}14` }]}>
                 <Ionicons name={action.icon} size={22} color={action.color} />
@@ -112,7 +112,7 @@ export default function ManagerDashboard() {
 
         <View style={styles.activitySection}>
           <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Recent activity</Text>
-          <View style={[styles.emptyState, { backgroundColor: theme.cardBg }]}>
+          <View style={[styles.emptyState, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]}>
             <View style={styles.emptyIcon}>
               <Ionicons name="time-outline" size={23} color="#1565C0" />
             </View>
@@ -233,4 +233,5 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 14, fontWeight: '700' },
   emptyDescription: { fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 4 },
 });
+
 

@@ -64,7 +64,7 @@ export default function ManageScreen() {
 
         {/* 1. Manage Danger Zones */}
         <TouchableOpacity 
-          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]} 
           onPress={() => router.push('/(manager)/danger-zones')}
           activeOpacity={0.8}
         >
@@ -80,7 +80,7 @@ export default function ManageScreen() {
 
         {/* 2. Manage Animals (IoT Collars) */}
         <TouchableOpacity 
-          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]} 
           onPress={() => router.push('/(manager)/manage-animals')}
           activeOpacity={0.8}
         >
@@ -96,7 +96,7 @@ export default function ManageScreen() {
 
         {/* 3. Manage Rangers */}
         <TouchableOpacity 
-          style={[styles.menuCard, { backgroundColor: theme.cardBg }]} 
+          style={[styles.menuCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]} 
           onPress={() => {}}
           activeOpacity={0.8}
         >
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   menuTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 5 },
   menuDesc: { fontSize: 12, color: COLORS.slate, lineHeight: 17 }
 });
+
 
 
 

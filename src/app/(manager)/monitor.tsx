@@ -60,7 +60,7 @@ export default function MonitorScreen() {
         </View>
 
         {/* Tab Switcher matching the flat styling */}
-        <View style={[styles.filterSection, { backgroundColor: theme.cardBg }]}>
+        <View style={[styles.filterSection, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]}>
           <Text style={[styles.fieldLabel, { color: theme.textPrimary }]}>Monitor target</Text>
           <View style={styles.periodOptions}>
             <TouchableOpacity
@@ -82,7 +82,7 @@ export default function MonitorScreen() {
         </View>
 
         {activeTab === 'rangers' ? (
-          <View style={[styles.stateCard, { backgroundColor: theme.cardBg }]}>
+          <View style={[styles.stateCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]}>
             <View style={styles.stateIcon}>
               <Ionicons name="people-outline" size={25} color={COLORS.slate} />
             </View>
@@ -103,7 +103,7 @@ export default function MonitorScreen() {
             </View>
 
             {/* Alert Card 1 (System) */}
-            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
+            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
               <View style={styles.alertHeader}>
                 <Ionicons name="warning" size={20} color={COLORS.red} />
                 <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: E-024</Text>
@@ -127,7 +127,7 @@ export default function MonitorScreen() {
             </View>
 
             {/* Alert Card 2 (Community) */}
-            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderLeftColor: COLORS.yellow, borderLeftWidth: 4 }]}>
+            <View style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.yellow, borderLeftWidth: 4 }]}>
               <View style={styles.alertHeader}>
                 <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.yellow} />
                 <Text style={[styles.cardTitle, { color: COLORS.yellow, marginLeft: 8 }]}>COMMUNITY REPORT</Text>
@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
   btnSecondaryText: { color: COLORS.darkBlue, fontSize: 13, fontWeight: '700' },
 });
+
 
 
 
