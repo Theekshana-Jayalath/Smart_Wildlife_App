@@ -7,7 +7,7 @@ export default function TabLayout() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.replace('/');
+      setTimeout(() => router.replace('/'), 100);
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
