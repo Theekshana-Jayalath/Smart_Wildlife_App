@@ -7,6 +7,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(ranger)" />
+        <Stack.Screen name="(manager)" />
+        <Stack.Screen name="(researcher)" />
       </Stack>
     </ThemeProvider>
   );
