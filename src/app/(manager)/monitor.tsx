@@ -39,12 +39,7 @@ export default function MonitorScreen() {
       return () => { unsubInc(); unsubRangers(); };
   }, []);
 
-  React.useEffect(() => {
-    if (webViewRef.current && rangers.length > 0) {
-      const script = `updateRangers(${JSON.stringify(rangers)});`;
-      webViewRef.current.injectJavaScript(script);
-    }
-  }, [rangers]);
+  
 
 
   const handleBroadcastSMS = (alertId: string, zoneName: string) => {
@@ -80,18 +75,8 @@ export default function MonitorScreen() {
           }
           .sos-marker {
             background-color: #D32F2F;
-            animation: pulse 1s infinite;
-          }
-          .normal-marker {
-            background-color: #2E7D32;
-          }
-          @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
-            70% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
           }
           .leaflet-popup-content-wrapper { border-radius: 8px; }
-          .resolve-btn { background: #1565C0; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; width: 100%; }
       </style>
   </head>
   <body>
@@ -100,39 +85,17 @@ export default function MonitorScreen() {
           var map = L.map('map').setView([6.3750, 81.5140], 14); 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
+          var rangersData = ${JSON.stringify(rangers)};
+          var sosRangers = rangersData.filter(function(r) { return r.isSOS; });
           
-          // Keep a global array of markers so we can remove them before redrawing
-          if (!window.rangerMarkers) window.rangerMarkers = [];
-          
-          window.updateRangers = function(rangersData) {
-            // Remove old markers
-            window.rangerMarkers.forEach(function(m) { map.removeLayer(m); });
-            window.rangerMarkers = [];
-            var sosRangers = rangersData.filter(function(r) { return r.isSOS; });
-            sosRangers.forEach(function(r) {
-              var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
-              var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
-              
-              var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
-              var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
-              marker.bindPopup(popupContent);
-              
-              window.rangerMarkers.push(marker);
-            });
-          };
-          
-          // Initial draw
-          window.updateRangers(${JSON.stringify(rangers)});
-
+          sosRangers.forEach(function(r) {
+            var iconHtml = '<div class="custom-marker sos-marker"></div>';
+            var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
             
             var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
-            
-            var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
-              marker.bindPopup(popupContent);
+            var popupContent = '<b>' + r.name + '</b><br/><span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>';
+            marker.bindPopup(popupContent);
           });
-          
-          ));
-          }
       </script>
   </body>
   </html>
@@ -200,11 +163,11 @@ export default function MonitorScreen() {
                       <View>
   <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
               <WebView
-                  ref={webViewRef}
+                  key={rangers.filter(r => r.isSOS).length}
                   originWhitelist={['*']}
                 source={{ html: rangersMapHtml }}
                 onMessage={handleWebViewMessage}
-                style={{ flex: 1 }}
+                style={{ flex: 1, backgroundColor: 'transparent' }}
                 scrollEnabled={false}
               />
             </View>
