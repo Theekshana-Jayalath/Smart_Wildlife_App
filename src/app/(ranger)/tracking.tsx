@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { animalPaths, staticAnimals } from '../../utils/dummyData';
+import { DangerZone, subscribeToDangerZones, LatLng } from '../../services/dangerZoneService';
 
 export default function TrackingScreen() {
   const { theme } = useTheme();
@@ -14,6 +15,7 @@ export default function TrackingScreen() {
   const [showAlert, setShowAlert] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [dangerZones, setDangerZones] = useState<DangerZone[]>([]);
 
   const checkDangerZone = (lat: number, lng: number) => {
     return (lat >= 6.3745 && lat <= 6.3805 && lng >= 81.5115 && lng <= 81.5165);
@@ -93,6 +95,12 @@ export default function TrackingScreen() {
             var dangerBounds = [[6.3750, 81.5120], [6.3800, 81.5160]];
             L.rectangle(dangerBounds, {color: "#d32f2f", weight: 2, fillOpacity: 0.2}).addTo(map);
             
+            var dangerZonesData = ${JSON.stringify(dangerZones)};
+            dangerZonesData.forEach(function(z) {
+                var latlngs = z.points.map(function(p) { return [p.lat, p.lng]; });
+                L.polygon(latlngs, {color: '#d32f2f', weight: 2, fillOpacity: 0.2}).addTo(map);
+            });
+
             var markers = L.markerClusterGroup({ maxClusterRadius: 40 });
             ${staticAnimalsScript}
             map.addLayer(markers);
