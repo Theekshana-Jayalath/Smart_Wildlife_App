@@ -523,6 +523,7 @@ function SourceAvailability({ report, theme }: { report: ConservationReport; the
 }
 
 const styles = StyleSheet.create({
+  sourceList: { marginTop: 10 },
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
   header: { backgroundColor: COLORS.darkBlue, borderRadius: 8, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
@@ -611,3 +612,4 @@ const styles = StyleSheet.create({
   backButton: { minHeight: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 6, backgroundColor: COLORS.lightBlue },
   backText: { color: COLORS.darkBlue, fontSize: 12, fontWeight: '700' },
 });
+
