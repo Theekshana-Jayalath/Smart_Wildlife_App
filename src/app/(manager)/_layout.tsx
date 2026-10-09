@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function TabLayout() {
-  const { theme } = useTheme();
+  const { isDarkMode, theme } = useTheme();
 
   return (
     <Tabs
@@ -12,7 +12,10 @@ export default function TabLayout() {
         headerTintColor: '#FFFFFF',
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
-        tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E3F2FD' },
+        tabBarStyle: {
+          backgroundColor: isDarkMode ? '#0B132B' : '#FFFFFF',
+          borderTopColor: isDarkMode ? '#1C2541' : '#E3F2FD',
+        },
       }}>
       <Tabs.Screen
         name="index"

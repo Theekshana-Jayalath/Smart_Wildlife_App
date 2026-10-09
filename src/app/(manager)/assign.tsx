@@ -1,5 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import { useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import {
   ActivityIndicator,
   ScrollView,
@@ -36,6 +37,12 @@ function isValidDate(value: string): boolean {
 const bannerImage = require('../../assets/banner.jpg');
 
 export default function AssignScreen() {
+  const params = useLocalSearchParams<{
+    incidentId?: string;
+    incidentType?: string;
+    latitude?: string;
+    longitude?: string;
+  }>();
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const [points, setPoints] = useState<RoutePoint[]>([]);
   const [routeName, setRouteName] = useState('');
@@ -51,6 +58,31 @@ export default function AssignScreen() {
   const [reloadRangers, setReloadRangers] = useState(0);
   const [mapKey, setMapKey] = useState(0);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    if (params.incidentType && !routeName) {
+      const typeLabel = params.incidentType.replace(/_/g, ' ').toUpperCase();
+      setRouteName('Investigate ' + typeLabel);
+    }
+
+    if (params.latitude && params.longitude && points.length === 0) {
+      const lat = parseFloat(params.latitude);
+      const lng = parseFloat(params.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        const offset = 0.005;
+        setPoints([
+          { latitude: lat, longitude: lng, type: 'start' },
+          { latitude: lat + offset, longitude: lng + offset, type: 'end' },
+        ]);
+        setMapKey((k) => k + 1);
+      }
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (!patrolDate) {
+      setPatrolDate(todayStr);
+    }
+  }, [params.incidentId, params.incidentType, params.latitude, params.longitude]);
 
   useEffect(() => {
     let active = true;
@@ -152,6 +184,7 @@ export default function AssignScreen() {
         approximateDistanceKm: calculateDistance(points),
         patrolDate: date,
         estimatedDurationMinutes: minutes,
+        incidentId: params.incidentId,
       });
 
       setSuccess(`"${name}" assigned successfully.`);
@@ -189,7 +222,7 @@ export default function AssignScreen() {
               <Ionicons name="person-add-outline" size={26} color="#FFFFFF" />
             </View>
             <View style={styles.headerCopy}>
-              <Text style={styles.headerEyebrow}>ROSTER CONTROLS · MANAGER</Text>
+              <Text style={styles.headerEyebrow}>ROSTER CONTROLS ï¿½ MANAGER</Text>
               <Text style={styles.headerTitle}>Assign Patrols</Text>
               <Text style={styles.headerSubtitle}>Create and dispatch ranger patrols</Text>
             </View>

@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   Share,
   StyleSheet,
   Text,
-  TextInput, Image,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -16,15 +17,15 @@ import {
   ConservationReport,
   REPORT_DEFINITIONS,
   ReportKind,
-  ReportSource, SourceResult,
+  SourceResult,
 } from '../../services/reportAnalytics';
 import {
   generateConservationReport,
   ReportDateRange,
   ReportProgressStage,
 } from '../../services/reportService';
+import { IncidentReportsTab } from './IncidentReportsTab';
 
-const bannerImage = require('../../assets/banner.jpg');
 const COLORS = {
   primary: '#1565C0',
   darkBlue: '#0D47A1',
@@ -74,6 +75,43 @@ function parseDateValue(value: string, endOfDay: boolean): Date | null {
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function csvCell(value: string | number): string {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+function buildReportCsv(report: ConservationReport): string {
+  const rows: (string | number)[][] = [
+    ['Section', 'Metric', 'Value'],
+    ['Report', 'Type', REPORT_DEFINITIONS[report.kind].title],
+    ['Report', 'From', report.startDate.toISOString()],
+    ['Report', 'To', report.endDate.toISOString()],
+    ['Report', 'Generated', report.generatedAt.toISOString()],
+    ['Incidents', 'Total', report.incidents.total],
+    ['Incidents', 'Missing locations', report.incidents.missingLocations],
+    ...report.incidents.categories.map((item) => ['Incident category', item.label, item.count]),
+    ...report.incidents.trend.map((item) => ['Incident trend', item.label, item.count]),
+    ['Poaching', 'Candidate incidents', report.poaching.candidateIncidentCount],
+    ['Poaching', 'Potential clusters', report.poaching.hotspots.length],
+    ...report.poaching.hotspots.map((item) => ['Potential hotspot', item.label, item.incidents]),
+    ['Patrols', 'Assignments', report.patrols.assigned],
+    ['Patrols', 'Completed', report.patrols.completed],
+    ['Patrols', 'Completion percent', report.patrols.completionPercent ?? 'Unavailable'],
+    ['Patrols', 'Planned route distance km', report.patrols.plannedDistanceKm],
+    ['Patrols', 'GPS spatial coverage', 'Unavailable: GPS trail is not uploaded'],
+    ...report.patrols.routeProgress.map((item) => ['Patrol route', item.routeName, `${item.completed}/${item.assigned} complete`]),
+    ['Community conflicts', 'Total', report.conflicts.total],
+    ['Community conflicts', 'Missing locations', report.conflicts.missingLocations],
+    ...report.conflicts.categories.map((item) => ['Conflict category', item.label, item.count]),
+    ...report.conflicts.trend.map((item) => ['Conflict trend', item.label, item.count]),
+    ...(['incidents', 'patrols', 'conflicts'] as const).map((source) => [
+      'Data source',
+      source,
+      `${report.sourceResults[source].state}: ${report.sourceResults[source].records.length} records${report.sourceResults[source].error ? ` (${report.sourceResults[source].error})` : ''}`,
+    ]),
+  ];
+  return rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
 }
 
 function hasReportResults(report: ConservationReport, kind: ReportKind): boolean {
@@ -296,6 +334,7 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   const { theme } = useTheme();
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const [mainTab, setMainTab] = useState<'analytics' | 'incidents'>('analytics');
   const [kind, setKind] = useState<ReportKind>('overview');
   const [fromValue, setFromValue] = useState(localDateValue(monthStart));
   const [toValue, setToValue] = useState(localDateValue(today));
@@ -343,17 +382,23 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
     }
   }
 
-  async function shareReport() {
+  async function exportReport() {
     if (!report) return;
-    const message = [
-      `${REPORT_DEFINITIONS[kind].title}: ${formatDate(report.startDate)} – ${formatDate(report.endDate)}`,
-      `Incidents: ${report.incidents.total}`,
-      `Potential poaching hotspots: ${report.poaching.hotspots.length}`,
-      `Patrol assignments completed: ${report.patrols.completed}/${report.patrols.assigned}`,
-      `Community conflict reports: ${report.conflicts.total}`,
-      report.partialData ? 'Partial data: some source collections are unavailable.' : 'All connected sources returned data.',
-    ].join('\n');
-    await Share.share({ title: 'Conservation report', message });
+    const csv = buildReportCsv(report);
+    const filename = `conservation-report-${localDateValue(report.generatedAt)}.csv`;
+
+    if (Platform.OS === 'web') {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    await Share.share({ title: filename, message: csv });
   }
 
   const stageIndex = progress ? STAGES.findIndex((stage) => stage.id === progress) : -1;
@@ -363,22 +408,42 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.bannerContainer}>
-            <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
-            <View style={styles.bannerOverlay}>
-              <View style={styles.headerIcon}>
-                <Ionicons name="analytics-outline" size={26} color={COLORS.white} />
-              </View>
-              <View style={styles.headerCopy}>
-                <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
-                <Text style={styles.headerTitle}>Conservation reports</Text>
-                <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
-              </View>
-            </View>
+        <View style={styles.header}>
+          <View style={styles.headerIcon}><Ionicons name="analytics-outline" size={23} color={COLORS.white} /></View>
+          <View style={styles.headerCopy}>
+            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
+            <Text style={styles.headerTitle}>Conservation reports</Text>
+            <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
           </View>
+        </View>
+
+        {audience === 'Park manager' && (
+          <View style={styles.tabBarContainer}>
+            <TouchableOpacity
+              style={[styles.mainTabBtn, mainTab === 'analytics' && styles.mainTabBtnActive]}
+              onPress={() => setMainTab('analytics')}
+            >
+              <Ionicons name="bar-chart-outline" size={16} color={mainTab === 'analytics' ? COLORS.primary : COLORS.slate} />
+              <Text style={[styles.mainTabText, mainTab === 'analytics' && styles.mainTabTextActive]}>Analytics Reports</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.mainTabBtn, mainTab === 'incidents' && styles.mainTabBtnActive]}
+              onPress={() => setMainTab('incidents')}
+            >
+              <Ionicons name="alert-circle-outline" size={16} color={mainTab === 'incidents' ? COLORS.primary : COLORS.slate} />
+              <Text style={[styles.mainTabText, mainTab === 'incidents' && styles.mainTabTextActive]}>Incident Reports</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {mainTab === 'incidents' ? (
+          <IncidentReportsTab />
+        ) : (
+          <View style={{ gap: 16 }}>
 
         {viewState !== 'results' && viewState !== 'empty' && (
-          <View style={[styles.filterSection, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+          <View style={styles.filterSection}>
             <Text style={[styles.fieldLabel, { color: theme.textPrimary }]}>Report type</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.typeOptions}>
               {REPORT_OPTIONS.map((option) => {
@@ -504,14 +569,16 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
           <>
             <ResultPanel report={report} kind={kind} theme={theme} />
             <View style={styles.resultActions}>
-              <TouchableOpacity accessibilityRole="button" onPress={shareReport} style={styles.shareButton} activeOpacity={0.8}>
-                <Ionicons name="share-outline" size={18} color={COLORS.primary} /><Text style={styles.shareText}>Share report summary</Text>
+              <TouchableOpacity accessibilityRole="button" onPress={exportReport} style={styles.shareButton} activeOpacity={0.8}>
+                <Ionicons name="download-outline" size={18} color={COLORS.primary} /><Text style={styles.shareText}>Export report (CSV)</Text>
               </TouchableOpacity>
               <TouchableOpacity accessibilityRole="button" onPress={() => setViewState('idle')} style={styles.backButton} activeOpacity={0.8}>
                 <Text style={styles.backText}>Back to report options</Text>
               </TouchableOpacity>
             </View>
           </>
+        )}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -529,20 +596,19 @@ function SourceAvailability({ report, theme }: { report: ConservationReport; the
 }
 
 const styles = StyleSheet.create({
-
-    bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
-    bannerImage: { width: '100%', height: '100%', position: 'absolute' },
-    bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
-
-  sourceList: { marginTop: 10 },
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
-  header: { backgroundColor: COLORS.darkBlue, borderRadius: 8, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  header: { backgroundColor: COLORS.darkBlue, borderRadius: 8, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   headerIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center', marginRight: 13 },
   headerCopy: { flex: 1 },
   headerEyebrow: { color: '#BBDEFB', fontSize: 9, fontWeight: '700' },
   headerTitle: { color: COLORS.white, fontSize: 21, fontWeight: '700', marginTop: 4 },
   headerSubtitle: { color: '#E3F2FD', fontSize: 12, marginTop: 3 },
+  tabBarContainer: { flexDirection: 'row', backgroundColor: '#E2E8F0', padding: 4, borderRadius: 8, marginBottom: 16, gap: 4 },
+  mainTabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 6 },
+  mainTabBtnActive: { backgroundColor: COLORS.white, elevation: 1 },
+  mainTabText: { fontSize: 13, fontWeight: '600', color: COLORS.slate },
+  mainTabTextActive: { color: COLORS.primary, fontWeight: '700' },
   filterSection: { backgroundColor: COLORS.white, borderRadius: 8, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginBottom: 16 },
   fieldLabel: { fontSize: 14, fontWeight: '700', marginBottom: 9 },
   typeOptions: { gap: 8, paddingRight: 4 },
@@ -616,6 +682,7 @@ const styles = StyleSheet.create({
   sourceState: { flex: 1, fontSize: 9, textAlign: 'right' },
   emptySource: { minHeight: 68, borderRadius: 6, borderWidth: 1, borderColor: COLORS.border, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 9 },
   emptySourceText: { flex: 1, color: COLORS.slate, fontSize: 12, lineHeight: 17 },
+  sourceList: { gap: 8, marginTop: 12 },
   generatedAt: { fontSize: 10, textAlign: 'right', marginTop: 2 },
   resultActions: { gap: 9, marginTop: 14 },
   shareButton: { minHeight: 44, borderWidth: 1, borderColor: COLORS.primary, borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
@@ -623,4 +690,3 @@ const styles = StyleSheet.create({
   backButton: { minHeight: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 6, backgroundColor: COLORS.lightBlue },
   backText: { color: COLORS.darkBlue, fontSize: 12, fontWeight: '700' },
 });
-

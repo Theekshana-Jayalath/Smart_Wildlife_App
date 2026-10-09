@@ -241,7 +241,7 @@ export default function MonitorScreen() {
                 <Text style={[styles.resultTitle, { color: theme.textPrimary }]}>Live Alerts Inbox</Text>
                 <Text style={styles.resultRange}>Showing high-risk notifications</Text>
               </View>
-              <TouchableOpacity onPress={() => router.push('/(manager)/all-alerts')}>
+              <TouchableOpacity onPress={() => router.push('/(manager)/all-alerts' as any)}>
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>

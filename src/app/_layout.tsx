@@ -7,7 +7,7 @@ function AppContent() {
   
   return (
     <>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} backgroundColor={isDarkMode ? '#0B132B' : '#F8F9FA'} />
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
