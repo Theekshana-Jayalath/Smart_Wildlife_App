@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
-import { IncidentService, RangerIncident } from '../../services/incidentService';
+import { IncidentAlert, subscribeToIncidents } from '../../services/incidentService';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { RangerLocation, subscribeToRangers, resolveRangerSOS } from '../../services/rangerService';
 
@@ -29,17 +29,22 @@ export default function MonitorScreen() {
   const [broadcastedIds, setBroadcastedIds] = React.useState<Record<string, boolean>>({});
   const router = useRouter();
   const { theme, isDarkMode, toggleTheme } = useTheme();
-  const [incidents, setIncidents] = React.useState<(RangerIncident & { rangerName?: string; rawData: any })[]>([]);
+  const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
   const [rangers, setRangers] = React.useState<RangerLocation[]>([]);
   const webViewRef = React.useRef<WebView>(null);
   
   React.useEffect(() => {
-    const unsubInc = IncidentService.subscribeToAllIncidents(setIncidents);
+    const unsubInc = subscribeToIncidents(setIncidents);
     const unsubRangers = subscribeToRangers(setRangers);
       return () => { unsubInc(); unsubRangers(); };
   }, []);
 
-  
+  React.useEffect(() => {
+    if (webViewRef.current && rangers.length > 0) {
+      const script = `updateRangers(${JSON.stringify(rangers)});`;
+      webViewRef.current.injectJavaScript(script);
+    }
+  }, [rangers]);
 
 
   const handleBroadcastSMS = (alertId: string, zoneName: string) => {
@@ -75,8 +80,18 @@ export default function MonitorScreen() {
           }
           .sos-marker {
             background-color: #D32F2F;
+            animation: pulse 1s infinite;
+          }
+          .normal-marker {
+            background-color: #2E7D32;
+          }
+          @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
+            70% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
           }
           .leaflet-popup-content-wrapper { border-radius: 8px; }
+          .resolve-btn { background: #1565C0; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; width: 100%; }
       </style>
   </head>
   <body>
@@ -85,17 +100,29 @@ export default function MonitorScreen() {
           var map = L.map('map').setView([6.3750, 81.5140], 14); 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-          var rangersData = ${JSON.stringify(rangers)};
-          var sosRangers = rangersData.filter(function(r) { return r.isSOS; });
           
-          sosRangers.forEach(function(r) {
-            var iconHtml = '<div class="custom-marker sos-marker"></div>';
-            var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
-            
-            var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
-            var popupContent = '<b>' + r.name + '</b><br/><span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>';
-            marker.bindPopup(popupContent);
-          });
+          // Keep a global array of markers so we can remove them before redrawing
+          if (!window.rangerMarkers) window.rangerMarkers = [];
+          
+          window.updateRangers = function(rangersData) {
+            // Remove old markers
+            window.rangerMarkers.forEach(function(m) { map.removeLayer(m); });
+            window.rangerMarkers = [];
+            var sosRangers = rangersData.filter(function(r) { return r.isSOS; });
+            sosRangers.forEach(function(r) {
+              var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
+              var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
+              
+              var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
+              var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
+              marker.bindPopup(popupContent);
+              
+              window.rangerMarkers.push(marker);
+            });
+          };
+          
+          // Initial draw
+          window.updateRangers(${JSON.stringify(rangers)});
       </script>
   </body>
   </html>
@@ -163,11 +190,11 @@ export default function MonitorScreen() {
                       <View>
   <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
               <WebView
-                  key={rangers.filter(r => r.isSOS).length}
+                  ref={webViewRef}
                   originWhitelist={['*']}
                 source={{ html: rangersMapHtml }}
                 onMessage={handleWebViewMessage}
-                style={{ flex: 1, backgroundColor: 'transparent' }}
+                style={{ flex: 1 }}
                 scrollEnabled={false}
               />
             </View>
@@ -215,39 +242,46 @@ export default function MonitorScreen() {
                 <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
                 <Text style={{color: theme.textSecondary, marginTop: 10}}>No active alerts today.</Text>
               </View>
-            ) : incidents.map(alert => (
-              <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
-                <View style={styles.alertHeader}>
-                  <Ionicons name="warning" size={20} color={COLORS.red} />
-                  <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {((alert as any).rawData?.species || alert.incidentType || 'UNKNOWN').toUpperCase()}</Text>
-                </View>
-                <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{((alert as any).rawData?.animalName || alert.incidentType || 'Animal')} breached {((alert as any).rawData?.zoneName || 'the zone')}!</Text>
-                
-                <Text style={styles.alertTime}>{new Date(alert.createdAt).toLocaleTimeString()}</Text>
+            ) : incidents.map(alert => {
+              const speciesText = (alert.species || alert.incidentType || 'INCIDENT').toUpperCase();
+              const animalText = alert.animalName || (alert.incidentType ? `Incident (${alert.incidentType})` : 'Wildlife Event');
+              const zoneText = alert.zoneName || 'Monitored Sector';
+              const timeText = alert.time || 'Recently';
 
-                <View style={styles.actionRow}>
-                  <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
-                    <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                      style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
-                      onPress={() => handleBroadcastSMS(alert.id, ((alert as any).rawData?.zoneName || 'the zone'))} 
-                      disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
-                    >
-                      {broadcastingIds[alert.id] ? (
-                        <ActivityIndicator size="small" color={COLORS.primary} />
-                      ) : broadcastedIds[alert.id] ? (
-                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                          <Ionicons name="checkmark-circle" size={16} color="#2E7D32" style={{marginRight: 4}} />
-                          <Text style={[styles.btnSecondaryText, { color: '#2E7D32' }]}>Sent</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
-                      )}
+              return (
+                <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
+                  <View style={styles.alertHeader}>
+                    <Ionicons name="warning" size={20} color={COLORS.red} />
+                    <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {speciesText}</Text>
+                  </View>
+                  <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{animalText} reported in {zoneText}!</Text>
+                  
+                  <Text style={styles.alertTime}>{timeText}</Text>
+
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
+                      <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
+                        onPress={() => handleBroadcastSMS(alert.id, zoneText)} 
+                        disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
+                      >
+                        {broadcastingIds[alert.id] ? (
+                          <ActivityIndicator size="small" color={COLORS.primary} />
+                        ) : broadcastedIds[alert.id] ? (
+                          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Ionicons name="checkmark-circle" size={16} color="#2E7D32" style={{marginRight: 4}} />
+                            <Text style={[styles.btnSecondaryText, { color: '#2E7D32' }]}>Sent</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
+                        )}
+                      </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
 </View>
         )}
       </ScrollView>
