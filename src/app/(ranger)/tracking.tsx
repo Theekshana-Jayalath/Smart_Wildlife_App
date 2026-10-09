@@ -20,7 +20,7 @@ export default function TrackingScreen() {
   };
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: any;
     if (isSimulating) {
       timer = setInterval(() => {
         setStep((currentStep) => {
@@ -105,13 +105,13 @@ export default function TrackingScreen() {
   `;
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: '#F5F8FB' }]} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* Search Bar & Filters */}
-        <View style={styles.topSection}>
-          <View style={styles.searchBar}>
+        <View style={[styles.topSection, { backgroundColor: theme.background }]}>
+          <View style={[styles.searchBar, { backgroundColor: theme.cardBg, borderColor: theme.inputBorder }]}>
             <Ionicons name="search" size={20} color="#888" />
             <Text style={styles.searchText}>Search animal ID or species</Text>
           </View>
@@ -120,7 +120,7 @@ export default function TrackingScreen() {
             {['All', 'Elephants', 'Leopards', 'Deer'].map((f) => (
               <TouchableOpacity 
                 key={f}
-                style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
+                style={[styles.filterChip, { backgroundColor: theme.cardBg, borderColor: theme.inputBorder }, activeFilter === f && styles.filterChipActive]}
                 onPress={() => setActiveFilter(f)}
               >
                 <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>{f}</Text>
@@ -139,8 +139,8 @@ export default function TrackingScreen() {
         </View>
 
         {/* Stats Row */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
+        <View style={[styles.statsContainer, { backgroundColor: theme.cardBg, borderColor: theme.inputBorder }]}>
+          <View style={[styles.statBox, { borderRightColor: theme.inputBorder }]}>
             <Text style={[styles.statValue, { color: '#0D47A1' }]}>12</Text>
             <View style={styles.statLabelRow}>
               <Text style={styles.statLabel}>Tracked</Text>
@@ -148,7 +148,7 @@ export default function TrackingScreen() {
             </View>
           </View>
           
-          <View style={styles.statBox}>
+          <View style={[styles.statBox, { borderRightColor: theme.inputBorder }]}>
             <Text style={[styles.statValue, { color: '#2E7D32' }]}>10</Text>
             <View style={styles.statLabelRow}>
               <Text style={styles.statLabel}>Safe</Text>
@@ -166,19 +166,19 @@ export default function TrackingScreen() {
         </View>
 
         {/* Recent Updates List */}
-        <View style={styles.updatesContainer}>
+        <View style={[styles.updatesContainer, { backgroundColor: theme.cardBg, borderColor: theme.inputBorder }]}>
           <View style={styles.updatesHeader}>
-            <Text style={styles.updatesTitle}>Recent Updates</Text>
+            <Text style={[styles.updatesTitle, { color: theme.textPrimary }]}>Recent Updates</Text>
             <TouchableOpacity><Text style={styles.viewAllText}>View All {'>'}</Text></TouchableOpacity>
           </View>
 
           {/* Update Item 1 */}
           <View style={styles.updateItem}>
-            <View style={styles.animalIconBox}>
+            <View style={[styles.animalIconBox, { backgroundColor: theme.background, borderColor: theme.inputBorder }]}>
               <MaterialCommunityIcons name="elephant" size={24} color="#546E7A" />
             </View>
             <View style={styles.updateTextCol}>
-              <Text style={styles.animalId}>E-024</Text>
+              <Text style={[styles.animalId, { color: theme.textPrimary }]}>E-024</Text>
               <Text style={styles.animalStatus}>Moved to North Boundary</Text>
             </View>
             <View style={styles.updateMetaCol}>
@@ -189,11 +189,11 @@ export default function TrackingScreen() {
 
           {/* Update Item 2 */}
           <View style={styles.updateItem}>
-            <View style={styles.animalIconBox}>
+            <View style={[styles.animalIconBox, { backgroundColor: theme.background, borderColor: theme.inputBorder }]}>
               <MaterialCommunityIcons name="elephant" size={24} color="#546E7A" />
             </View>
             <View style={styles.updateTextCol}>
-              <Text style={styles.animalId}>E-011</Text>
+              <Text style={[styles.animalId, { color: theme.textPrimary }]}>E-011</Text>
               <Text style={styles.animalStatus}>In Safe Zone</Text>
             </View>
             <View style={styles.updateMetaCol}>
@@ -204,11 +204,11 @@ export default function TrackingScreen() {
           
           {/* Update Item 3 */}
           <View style={styles.updateItem}>
-            <View style={styles.animalIconBox}>
+            <View style={[styles.animalIconBox, { backgroundColor: theme.background, borderColor: theme.inputBorder }]}>
               <MaterialCommunityIcons name="elephant" size={24} color="#546E7A" />
             </View>
             <View style={styles.updateTextCol}>
-              <Text style={styles.animalId}>E-015</Text>
+              <Text style={[styles.animalId, { color: theme.textPrimary }]}>E-015</Text>
               <Text style={styles.animalStatus}>No Signal</Text>
             </View>
             <View style={styles.updateMetaCol}>
@@ -231,17 +231,17 @@ export default function TrackingScreen() {
       {/* Wireframe-matched Alert Modal */}
       <Modal visible={showAlert} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+          <View style={[styles.modalBox, { backgroundColor: theme.cardBg }]}>
             
             <View style={styles.modalHeader}>
               <Ionicons name="arrow-back" size={24} color="#000" onPress={() => setShowAlert(false)} />
-              <Text style={styles.modalHeaderTitle}>High-Risk Alert</Text>
+              <Text style={[styles.modalHeaderTitle, { color: theme.textPrimary }]}>High-Risk Alert</Text>
               <View style={{width: 24}} /> 
             </View>
 
             <Ionicons name="warning" size={80} color="#D32F2F" style={{alignSelf: 'center', marginVertical: 15}} />
             
-            <Text style={styles.modalTitle}>High-Risk Zone Entered</Text>
+            <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>High-Risk Zone Entered</Text>
             <Text style={styles.modalDesc}>Elephant E-024 has entered a high-risk zone (Farmland Area) at 10:22 AM.</Text>
             
             <View style={styles.miniMapPlaceholder}>
@@ -325,4 +325,8 @@ const styles = StyleSheet.create({
   btnSecondary: { backgroundColor: '#fff', width: '100%', paddingVertical: 14, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#1565C0' },
   btnSecondaryText: { color: '#1565C0', fontSize: 14, fontWeight: 'bold' },
 });
+
+
+
+
 
