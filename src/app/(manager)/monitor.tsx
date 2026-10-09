@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { IncidentAlert, subscribeToIncidents } from '../../services/incidentService';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { RangerLocation, subscribeToRangers, resolveRangerSOS } from '../../services/rangerService';
 
 // Using exact colors from the Reports screen for consistency!
 const bannerImage = require('../../assets/banner.jpg');
@@ -28,9 +30,90 @@ export default function MonitorScreen() {
   const router = useRouter();
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
+  const [rangers, setRangers] = React.useState<RangerLocation[]>([]);
   
   React.useEffect(() => {
-    return subscribeToIncidents(setIncidents);
+    const unsubInc = subscribeToIncidents(setIncidents);
+    const unsubRangers = subscribeToRangers(setRangers);
+    const rangersMapHtml = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <style>
+          body { padding: 0; margin: 0; background: ${isDarkMode ? '#1e1e1e' : '#ffffff'}; } 
+          html, body, #map { height: 100%; width: 100%; }
+          ${isDarkMode ? '.leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }' : ''}
+          .custom-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+          }
+          .sos-marker {
+            background-color: #D32F2F;
+            animation: pulse 1s infinite;
+          }
+          .normal-marker {
+            background-color: #2E7D32;
+          }
+          @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); }
+            70% { transform: scale(1.3); box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+          }
+          .leaflet-popup-content-wrapper { border-radius: 8px; }
+          .resolve-btn { background: #1565C0; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; width: 100%; }
+      </style>
+  </head>
+  <body>
+      <div id="map"></div>
+      <script>
+          var map = L.map('map').setView([6.3750, 81.5140], 14); 
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+          var rangers = ${JSON.stringify(rangers)};
+          
+          rangers.forEach(function(r) {
+            var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
+            var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
+            
+            var marker = L.marker([r.lat, r.lng], { icon: icon }).addTo(map);
+            
+            var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
+            
+            if (r.isSOS) {
+              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS(\'' + r.id + '\')">Resolve SOS</button>';
+            }
+            
+            marker.bindPopup(popupContent);
+          });
+          
+          function resolveSOS(id) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'RESOLVE_SOS', id: id }));
+          }
+      </script>
+  </body>
+  </html>
+`;
+  
+  const handleWebViewMessage = async (event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'RESOLVE_SOS') {
+        Alert.alert("Confirm", "Mark this SOS as resolved?", [
+          { text: "Cancel", style: "cancel" },
+          { text: "Resolve", onPress: () => resolveRangerSOS(data.id) }
+        ]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  return () => { unsubInc(); unsubRangers(); };
   }, []);
 
   const handleBroadcastSMS = (alertId: string, zoneName: string) => {

@@ -5,6 +5,9 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
 import { auth } from '../../services/firebase';
+import * as Location from 'expo-location';
+import { updateRangerLocation } from '../../services/rangerService';
+import { Alert } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 
 const bannerImage = require('../../assets/banner.jpg');
@@ -23,6 +26,30 @@ export default function RangerDashboard() {
       }
     }, [])
   );
+
+
+  const handleSOS = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert('Error', 'Not logged in!');
+        return;
+      }
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      await updateRangerLocation(user.uid, user.displayName || 'Ranger', location.coords.latitude, location.coords.longitude, true);
+      Alert.alert('SOS Sent!', 'Your location has been marked in RED on the Manager map.');
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Failed to send SOS.');
+    }
+  };
 
   const handleReportIncident = () => {
     router.push('/(ranger)/incident');
@@ -96,7 +123,7 @@ export default function RangerDashboard() {
           <TouchableOpacity 
             style={[styles.actionCard, { backgroundColor: '#D32F2F', marginBottom: 15 }]} 
             activeOpacity={0.85}
-            onPress={() => alert('SOS Sent!')}
+            onPress={handleSOS}
           >
             <View style={styles.actionIconBadge}>
               <Ionicons name="warning" size={26} color="#FFFFFF" />
