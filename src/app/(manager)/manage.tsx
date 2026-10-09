@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
+import { useTheme } from '../../context/ThemeContext';
 
 const bannerImage = require('../../assets/banner.jpg');
 
@@ -23,6 +24,7 @@ const COLORS = {
 
 export default function ManageScreen() {
   const router = useRouter();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -49,6 +51,9 @@ export default function ManageScreen() {
               <Text style={styles.headerTitle}>Park Management</Text>
               <Text style={styles.headerSubtitle}>Configure resources and boundaries</Text>
             </View>
+            <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+              <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -138,6 +143,7 @@ const styles = StyleSheet.create({
   bannerImage: { width: '100%', height: '100%', position: 'absolute' },
   bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
   
+  darkToggleBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
   headerCopy: { flex: 1, justifyContent: 'center' },
   headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
@@ -154,3 +160,4 @@ const styles = StyleSheet.create({
   menuTitle: { fontSize: 15, fontWeight: '700', color: '#1A202C', marginBottom: 5 },
   menuDesc: { fontSize: 12, color: COLORS.slate, lineHeight: 17 }
 });
+

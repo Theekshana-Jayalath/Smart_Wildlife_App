@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../../context/ThemeContext';
 
 // Using exact colors from the Reports screen for consistency!
 const bannerImage = require('../../assets/banner.jpg');
@@ -23,6 +24,7 @@ export default function MonitorScreen() {
   const [activeTab, setActiveTab] = useState('animals');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const router = useRouter();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleBroadcastSMS = () => {
     setIsBroadcasting(true);
@@ -51,6 +53,9 @@ export default function MonitorScreen() {
               <Text style={styles.headerTitle}>System Monitor</Text>
               <Text style={styles.headerSubtitle}>View real-time locations and alerts</Text>
             </View>
+            <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+              <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -160,6 +165,7 @@ const styles = StyleSheet.create({
   bannerImage: { width: '100%', height: '100%', position: 'absolute' },
   bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
   
+  darkToggleBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
   headerCopy: { flex: 1, justifyContent: 'center' },
   headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
@@ -197,6 +203,7 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
   btnSecondaryText: { color: COLORS.darkBlue, fontSize: 13, fontWeight: '700' },
 });
+
 
 
 

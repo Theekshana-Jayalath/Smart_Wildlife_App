@@ -1,6 +1,15 @@
-import { Picker } from '@react-native-picker/picker';
-import { useEffect, useRef, useState } from 'react';
-import {
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image,  Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image,  useEffect, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, 
   ActivityIndicator,
   ScrollView,
   StyleSheet,
@@ -16,7 +25,10 @@ import type {
   RangerProfile,
   RoutePoint,
 } from '../../services/patrolService';
-import { PatrolService } from '../../services/patrolService';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image,  PatrolService } from '../../services/patrolService';
 
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -29,7 +41,9 @@ function isValidDate(value: string): boolean {
   );
 }
 
+const bannerImage = require('../../assets/banner.jpg');
 export default function AssignScreen() {
+  const { isDarkMode, toggleTheme } = useTheme();
   const [points, setPoints] = useState<RoutePoint[]>([]);
   const [routeName, setRouteName] = useState('');
   const [rangerUid, setRangerUid] = useState('');
@@ -169,15 +183,27 @@ export default function AssignScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <View style={styles.bannerContainer}>
+        <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+        <View style={styles.bannerOverlay}>
+          <View style={styles.headerIcon}>
+            <Ionicons name="person-add-outline" size={26} color="#FFFFFF" />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={styles.headerEyebrow}>ROSTER CONTROLS · MANAGER</Text>
+            <Text style={styles.headerTitle}>Assign Patrols</Text>
+            <Text style={styles.headerSubtitle}>Create and dispatch ranger patrols</Text>
+          </View>
+          <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+            <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <Text style={styles.title}>Plan a patrol</Text>
-      <Text style={styles.subtitle}>
-        Choose points on the map, then assign a ranger.
-      </Text>
+      <Text style={styles.subtitle}>Choose points on the map, then assign a ranger.</Text>
 
       <View pointerEvents={loading ? 'none' : 'auto'}>
         <RoutePickerMap
@@ -298,10 +324,22 @@ export default function AssignScreen() {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
+  bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
+  bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+  bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
+  headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  headerCopy: { flex: 1, justifyContent: 'center' },
+  headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  headerTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', marginTop: 4, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  headerSubtitle: { color: '#E3F2FD', fontSize: 13, marginTop: 4, fontWeight: '500' },
+  darkToggleBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',

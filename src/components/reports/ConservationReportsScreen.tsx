@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useState } from 'react';
+import { Image } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { generateConservationReport, ReportPeriod } from '../../services/reportService';
 import { REPORT_DEFINITIONS, ReportKind, ReportSummary } from '../../services/reportAnalytics';
@@ -17,6 +18,8 @@ const COLORS = {
   yellow: '#F57F17',
   border: '#D9E5EF',
 };
+
+const bannerImage = require('../../assets/banner.jpg');
 
 const REPORT_OPTIONS: { kind: ReportKind; icon: keyof typeof Ionicons.glyphMap }[] = [
   { kind: 'incidents', icon: 'warning-outline' },
@@ -162,7 +165,7 @@ function SummaryResults({ summary, theme }: { summary: ReportSummary; theme: Ret
 }
 
 export function ConservationReportsScreen({ audience }: { audience: 'Park manager' | 'Researcher' }) {
-  const { theme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
   const [kind, setKind] = useState<ReportKind>('incidents');
   const [period, setPeriod] = useState<ReportPeriod>(30);
   const [viewState, setViewState] = useState<ViewState>('idle');
@@ -188,14 +191,20 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="analytics-outline" size={23} color={COLORS.white} />
-          </View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE Â· {audience.toUpperCase()}</Text>
-            <Text style={styles.headerTitle}>Conservation reports</Text>
-            <Text style={styles.headerSubtitle}>Explore activity across a selected period</Text>
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="analytics-outline" size={26} color="#FFFFFF" />
+            </View>
+            <View style={styles.headerCopy}>
+              <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
+              <Text style={styles.headerTitle}>Reports</Text>
+              <Text style={styles.headerSubtitle}>Explore activity across a selected period</Text>
+            </View>
+            <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+              <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -338,9 +347,9 @@ const styles = StyleSheet.create({
     marginRight: 13,
   },
   headerCopy: { flex: 1 },
-  headerEyebrow: { color: '#BBDEFB', fontSize: 9, fontWeight: '700' },
-  headerTitle: { color: COLORS.white, fontSize: 21, fontWeight: '700', marginTop: 4 },
-  headerSubtitle: { color: '#E3F2FD', fontSize: 12, marginTop: 3 },
+  headerEyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  headerTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', marginTop: 4, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  headerSubtitle: { color: '#E3F2FD', fontSize: 13, marginTop: 4, fontWeight: '500' },
   filterSection: {
     backgroundColor: COLORS.white,
     borderRadius: 8,

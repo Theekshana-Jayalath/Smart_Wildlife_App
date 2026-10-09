@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
+
+const bannerImage = require('../../assets/banner.jpg');
 
 const managerActions = [
   {
@@ -35,15 +37,27 @@ const metrics = [
 ];
 
 export default function ManagerDashboard() {
-  const { theme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.brandMark}>
-            <Ionicons name="leaf-outline" size={22} color="#FFFFFF" />
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="leaf-outline" size={26} color="#FFFFFF" />
+            </View>
+            <View style={styles.headerCopy}>
+              <Text style={styles.eyebrow}>SMART WILDLIFE</Text>
+              <Text style={styles.title}>Park operations</Text>
+              <Text style={styles.subtitle}>Manager overview</Text>
+            </View>
+            <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+              <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
+        </View>
           <View style={styles.headerCopy}>
             <Text style={styles.eyebrow}>SMART WILDLIFE</Text>
             <Text style={styles.title}>Park operations</Text>
@@ -120,23 +134,12 @@ export default function ManagerDashboard() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
-  header: {
-    backgroundColor: '#0D47A1',
-    borderRadius: 8,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  brandMark: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
+  bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
+  bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+  bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
+  headerIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+  darkToggleBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  
   headerCopy: { flex: 1 },
   eyebrow: { color: '#BBDEFB', fontSize: 10, fontWeight: '700', letterSpacing: 1.2 },
   title: { color: '#FFFFFF', fontSize: 23, fontWeight: '700', marginTop: 3 },
