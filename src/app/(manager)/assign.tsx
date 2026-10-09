@@ -249,7 +249,7 @@ export default function AssignScreen() {
             selectedValue={rangerUid}
             enabled={!loading}
             onValueChange={(value: string) => setRangerUid(value)}
-            style={styles.picker}
+            style={[styles.picker, { color: theme.inputText, backgroundColor: theme.inputBg }]}
           >
             <Picker.Item label="Select a ranger" value="" />
             {rangers.map((ranger) => (
@@ -438,6 +438,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+
 
 
 
