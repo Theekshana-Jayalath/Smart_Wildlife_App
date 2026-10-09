@@ -58,12 +58,6 @@ export default function ManagerDashboard() {
             </TouchableOpacity>
           </View>
         </View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>SMART WILDLIFE</Text>
-            <Text style={styles.title}>Park operations</Text>
-            <Text style={styles.subtitle}>Manager overview</Text>
-          </View>
-        </View>
 
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Today at a glance</Text>
@@ -239,3 +233,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 14, fontWeight: '700' },
   emptyDescription: { fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 4 },
 });
+
