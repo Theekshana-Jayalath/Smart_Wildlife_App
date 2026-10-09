@@ -28,8 +28,8 @@ export default function DangerZonesScreen() {
   const handleMessage = (event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'ZONE_DRAWN') {
-        promptForZoneName(data.points);
+      if (data.type === 'POINTS_UPDATED') {
+        setPendingPoints(data.points);
       }
     } catch (e) {
       console.error(e);
