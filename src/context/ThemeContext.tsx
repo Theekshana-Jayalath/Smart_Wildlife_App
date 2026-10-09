@@ -11,7 +11,7 @@ interface ThemeContextType {
     header: string;
     inputBg: string;
     inputBorder: string;
-  border: string;
+    border: string;
     inputText: string;
     primary: string;
     emptyCardBg: string;
@@ -26,7 +26,7 @@ export const lightTheme = {
   header: '#0D47A1',
   inputBg: '#FFFFFF',
   inputBorder: '#E0E1E6',
-    border: '#E7EEF5',
+  border: '#E7EEF5',
   inputText: '#111827',
   primary: '#1565C0',
   emptyCardBg: '#F4F8FB',
@@ -40,7 +40,7 @@ export const darkTheme = {
   header: '#1C2541',
   inputBg: '#1C2541',
   inputBorder: '#334155',
-    border: '#334155',
+  border: '#334155',
   inputText: '#F8FAFC',
   primary: '#2563EB',
   emptyCardBg: '#1E293B',
