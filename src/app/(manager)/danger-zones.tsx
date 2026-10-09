@@ -1,30 +1,73 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { DangerZone, fetchDangerZones, syncDangerZones, LatLng } from '../../services/dangerZoneService';
 
 export default function DangerZonesScreen() {
   const router = useRouter();
+  const webViewRef = useRef<WebView>(null);
+  const [initialZones, setInitialZones] = useState<DangerZone[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [currentZones, setCurrentZones] = useState<LatLng[][]>([]);
 
-  const handleSave = () => {
-    Alert.alert("Success", "New Danger Zone has been saved to the database. All Rangers will receive the updated boundaries.");
-    router.back();
+  useEffect(() => {
+    const loadZones = async () => {
+      const zones = await fetchDangerZones();
+      setInitialZones(zones);
+      setCurrentZones(zones.map(z => z.points));
+      setLoading(false);
+    };
+    loadZones();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await syncDangerZones(currentZones);
+      Alert.alert("Success", "Danger Zones have been updated and synced to the database.");
+      router.back();
+    } catch (e) {
+      Alert.alert("Error", "Failed to save danger zones");
+      setSaving(false);
+    }
   };
 
-  // We load a Leaflet Map with the Leaflet.draw plugin enabled!
+  const handleMessage = (event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'SYNC_ZONES') {
+        setCurrentZones(data.zones);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#d32f2f" />
+        <Text style={{marginTop: 10}}>Loading danger zones...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const initialZonesJson = JSON.stringify(initialZones.map(z => z.points));
+
   const mapHtml = `
     <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <!-- Leaflet Draw CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
         
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <!-- Leaflet Draw JS -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
         
         <style>body { padding: 0; margin: 0; } html, body, #map { height: 100%; width: 100%; }</style>
@@ -35,40 +78,49 @@ export default function DangerZonesScreen() {
             var map = L.map('map').setView([6.3750, 81.5140], 14); 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-            // Initialize the FeatureGroup to store editable layers
             var drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
 
-            // Initialize the draw control and pass it the FeatureGroup of editable layers
+            var initialZones = ${initialZonesJson};
+            initialZones.forEach(function(points) {
+                var latlngs = points.map(function(p) { return [p.lat, p.lng]; });
+                var polygon = L.polygon(latlngs, {color: "#d32f2f", weight: 2, fillOpacity: 0.2});
+                drawnItems.addLayer(polygon);
+            });
+
             var drawControl = new L.Control.Draw({
-                edit: {
-                    featureGroup: drawnItems
-                },
+                edit: { featureGroup: drawnItems },
                 draw: {
-                    polygon: {
-                        shapeOptions: { color: '#d32f2f' }
-                    },
+                    polygon: { shapeOptions: { color: '#d32f2f', weight: 2, fillOpacity: 0.2 } },
                     polyline: false,
-                    rectangle: {
-                        shapeOptions: { color: '#d32f2f' }
-                    },
-                    circle: false,
-                    marker: false,
-                    circlemarker: false
+                    rectangle: { shapeOptions: { color: '#d32f2f', weight: 2, fillOpacity: 0.2 } },
+                    circle: false, marker: false, circlemarker: false
                 }
             });
             map.addControl(drawControl);
 
-            // Draw an existing hardcoded zone just to show it
-            var existingZone = L.rectangle([[6.3750, 81.5120], [6.3800, 81.5160]], {color: "#d32f2f", weight: 2, fillOpacity: 0.2});
-            drawnItems.addLayer(existingZone);
+            function syncToReact() {
+                var zones = [];
+                drawnItems.eachLayer(function(layer) {
+                    var latlngs;
+                    if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                        latlngs = layer.getLatLngs()[0];
+                    }
+                    if (latlngs) {
+                        zones.push(latlngs.map(function(ll) { return {lat: ll.lat, lng: ll.lng}; }));
+                    }
+                });
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SYNC_ZONES', zones: zones }));
+                }
+            }
 
-            // Event listener for when a new polygon is created
             map.on(L.Draw.Event.CREATED, function (e) {
-                var layer = e.layer;
-                drawnItems.addLayer(layer);
-                // Here we would normally use window.ReactNativeWebView.postMessage to send coords to React Native
+                drawnItems.addLayer(e.layer);
+                syncToReact();
             });
+            map.on(L.Draw.Event.EDITED, function (e) { syncToReact(); });
+            map.on(L.Draw.Event.DELETED, function (e) { syncToReact(); });
         </script>
     </body>
     </html>
@@ -91,15 +143,17 @@ export default function DangerZonesScreen() {
 
       <View style={styles.mapContainer}>
         <WebView 
+          ref={webViewRef}
           source={{ html: mapHtml }}
           style={styles.map}
           scrollEnabled={false}
+          onMessage={handleMessage}
         />
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Save Zones to Database</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Save Zones to Database</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
