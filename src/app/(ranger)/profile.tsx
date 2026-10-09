@@ -25,7 +25,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       await signOut(auth);
-      if (router.dismissAll) { router.dismissAll(); } router.replace({ pathname: '/' } as any);;
+      router.replace('/');
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {
