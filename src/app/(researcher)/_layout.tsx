@@ -7,7 +7,7 @@ export default function TabLayout() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.replace('/');
+      if (router.dismissAll) { router.dismissAll(); } router.replace({ pathname: '/' } as any);;
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
