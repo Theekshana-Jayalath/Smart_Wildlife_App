@@ -23,7 +23,8 @@ const COLORS = {
 
 export default function MonitorScreen() {
   const [activeTab, setActiveTab] = useState('animals');
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcastingIds, setBroadcastingIds] = React.useState<Record<string, boolean>>({});
+  const [broadcastedIds, setBroadcastedIds] = React.useState<Record<string, boolean>>({});
   const router = useRouter();
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
@@ -32,10 +33,11 @@ export default function MonitorScreen() {
     return subscribeToIncidents(setIncidents);
   }, []);
 
-  const handleBroadcastSMS = (zoneName: string) => {
-    setIsBroadcasting(true);
+  const handleBroadcastSMS = (alertId: string, zoneName: string) => {
+    setBroadcastingIds(prev => ({...prev, [alertId]: true}));
     setTimeout(() => {
-      setIsBroadcasting(false);
+      setBroadcastingIds(prev => ({...prev, [alertId]: false}));
+      setBroadcastedIds(prev => ({...prev, [alertId]: true}));
       Alert.alert(
         "Twilio Gateway Success", 
         "\u2705 Broadcast complete!\n\nWarning SMS successfully sent to registered villagers in " + zoneName + " zone."
@@ -128,13 +130,22 @@ export default function MonitorScreen() {
                   <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
                     <Text style={styles.btnPrimaryText}>Assign Patrol</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.btnSecondary} onPress={() => handleBroadcastSMS(alert.zoneName)} disabled={isBroadcasting}>
-                    {isBroadcasting ? (
-                      <ActivityIndicator size="small" color={COLORS.primary} />
-                    ) : (
-                      <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
-                    )}
-                  </TouchableOpacity>
+                  <TouchableOpacity 
+                      style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
+                      onPress={() => handleBroadcastSMS(alert.id, alert.zoneName)} 
+                      disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
+                    >
+                      {broadcastingIds[alert.id] ? (
+                        <ActivityIndicator size="small" color={COLORS.primary} />
+                      ) : broadcastedIds[alert.id] ? (
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                          <Ionicons name="checkmark-circle" size={16} color="#2E7D32" style={{marginRight: 4}} />
+                          <Text style={[styles.btnSecondaryText, { color: '#2E7D32' }]}>Sent</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.btnSecondaryText}>Broadcast SMS</Text>
+                      )}
+                    </TouchableOpacity>
                 </View>
               </View>
             ))}

@@ -92,6 +92,23 @@ export default function RangerDashboard() {
             </TouchableOpacity>
           </View>
 
+                    {/* SOS Button */}
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: '#D32F2F', marginBottom: 15 }]} 
+            activeOpacity={0.85}
+            onPress={() => alert('SOS Sent!')}
+          >
+            <View style={styles.actionIconBadge}>
+              <Ionicons name="warning" size={26} color="#FFFFFF" />
+            </View>
+            <View style={styles.verticalDivider} />
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>EMERGENCY SOS</Text>
+              <Text style={styles.actionDescription}>Send immediate distress signal</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+
           {/* Action Card */}
           <TouchableOpacity 
             style={[styles.actionCard, { backgroundColor: theme.primary }]} 
