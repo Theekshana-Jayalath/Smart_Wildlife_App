@@ -12,7 +12,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { uploadImageToStorage } from './storageUtils';
+import { uploadImageToStorage, convertUriToBase64 } from './storageUtils';
 import * as Network from 'expo-network';
 import { OfflineStorageService } from './offlineStorageService';
 
@@ -45,6 +45,40 @@ export interface RangerIncident {
   isPendingSync: boolean;
 }
 
+export interface IncidentAlert {
+  id: string;
+  animalName?: string;
+  species?: string;
+  incidentType?: string;
+  zoneName?: string;
+  time?: string;
+  timestamp?: number;
+  lat?: number;
+  lng?: number;
+}
+
+export const logIncident = async (incident: Omit<IncidentAlert, 'id'>) => {
+  const newRef = doc(collection(db, 'incidents'));
+  await setDoc(newRef, incident);
+};
+
+export const subscribeToIncidents = (callback: (incidents: IncidentAlert[]) => void) => {
+  const q = query(collection(db, 'incidents'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        species: data.species || data.incidentType || 'INCIDENT',
+        animalName: data.animalName || (data.incidentType ? `Incident (${data.incidentType})` : 'Wildlife Event'),
+        zoneName: data.zoneName || 'Monitored Sector',
+        time: data.time || 'Recently',
+        ...data,
+      } as IncidentAlert;
+    }));
+  });
+};
+
 export class IncidentService {
   /**
    * Submits a complete incident report.
@@ -74,8 +108,8 @@ export class IncidentService {
           const fileName = `incidents/${user.uid}_${Date.now()}.jpg`;
           photoUrl = await uploadImageToStorage(data.photoUri, fileName);
         } catch (uploadErr: any) {
-          console.warn("Firebase Storage unavailable, proceeding with local photo URI:", uploadErr.message);
-          photoUrl = data.photoUri; // Fallback to local photo URI
+          console.warn("Firebase Storage unavailable, converting to base64 image:", uploadErr.message);
+          photoUrl = await convertUriToBase64(data.photoUri);
         }
       }
 

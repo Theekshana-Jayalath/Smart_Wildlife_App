@@ -1,14 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { AppTheme } from '../../theme';
 import { auth } from '../../services/firebase';
 import { useTheme } from '../../context/ThemeContext';
 import { SyncService, SyncStatus } from '../../services/syncService';
 import { useRangerIncidents } from '../../hooks/useRangerIncidents';
 import { IncidentCard } from '../../components/incident/IncidentCard';
+import { LocationService } from '../../services/locationService';
+import { updateRangerLocation } from '../../services/rangerService';
 
 const bannerImage = require('../../assets/banner.jpg');
 
@@ -40,6 +43,23 @@ export default function RangerDashboard() {
       }
     }, [])
   );
+
+  const handleSOS = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert('Error', 'Not logged in!');
+        return;
+      }
+
+      const loc = await LocationService.getCurrentLocationAsync();
+      await updateRangerLocation(user.uid, user.displayName || 'Ranger', loc.latitude, loc.longitude, true);
+      Alert.alert('SOS Sent!', 'Your emergency alert & location have been sent to headquarters.');
+    } catch (e: any) {
+      console.error(e);
+      Alert.alert('Error', 'Failed to send SOS: ' + (e.message || e));
+    }
+  };
 
   const handleReportIncident = () => {
     router.push('/(ranger)/incident?reset=true');
@@ -134,6 +154,30 @@ export default function RangerDashboard() {
               </Text>
             </View>
           )}
+
+          {/* Emergency SOS Card */}
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: '#D32F2F', marginBottom: 14 }]} 
+            activeOpacity={0.85}
+            onPress={handleSOS}
+          >
+            <View style={styles.actionIconBadge}>
+              <Ionicons name="warning" size={26} color="#FFFFFF" />
+            </View>
+
+            <View style={styles.verticalDivider} />
+
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>EMERGENCY SOS</Text>
+              <Text style={styles.actionDescription}>
+                Broadcast emergency alert and live GPS location to park managers immediately.
+              </Text>
+            </View>
+
+            <View style={styles.arrowBadge}>
+              <Ionicons name="alert-circle" size={18} color="#D32F2F" />
+            </View>
+          </TouchableOpacity>
 
           {/* Action Card */}
           <TouchableOpacity 

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IncidentSubmissionData } from './incidentService';
+import { convertUriToBase64 } from './storageUtils';
 
 const OFFLINE_INCIDENTS_KEY = '@offline_incidents';
 
@@ -17,8 +18,13 @@ export class OfflineStorageService {
   static async saveIncidentOffline(data: IncidentSubmissionData, rangerId: string): Promise<string> {
     try {
       const id = `offline_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      let photoUri = data.photoUri;
+      if (photoUri) {
+        photoUri = await convertUriToBase64(photoUri);
+      }
       const newIncident: OfflineIncident = {
         ...data,
+        photoUri,
         id,
         createdAt: Date.now(),
         synchronizationStatus: 'PENDING_SYNC',
