@@ -35,7 +35,23 @@ export default function MonitorScreen() {
   React.useEffect(() => {
     const unsubInc = subscribeToIncidents(setIncidents);
     const unsubRangers = subscribeToRangers(setRangers);
-    const rangersMapHtml = `
+      return () => { unsubInc(); unsubRangers(); };
+  }, []);
+
+  const handleBroadcastSMS = (alertId: string, zoneName: string) => {
+    setBroadcastingIds(prev => ({...prev, [alertId]: true}));
+    setTimeout(() => {
+      setBroadcastingIds(prev => ({...prev, [alertId]: false}));
+      setBroadcastedIds(prev => ({...prev, [alertId]: true}));
+      Alert.alert(
+        "Twilio Gateway Success", 
+        "\u2705 Broadcast complete!\n\nWarning SMS successfully sent to registered villagers in " + zoneName + " zone."
+      );
+    }, 2000);
+  };
+
+  
+  const rangersMapHtml = `
   <!DOCTYPE html>
   <html>
   <head>
@@ -86,7 +102,7 @@ export default function MonitorScreen() {
             var popupContent = '<b>' + r.name + '</b><br/>' + (r.isSOS ? '<span style="color:#D32F2F;font-weight:bold;">EMERGENCY SOS</span>' : '<span style="color:#2E7D32;">On Patrol</span>');
             
             if (r.isSOS) {
-              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS(\'' + r.id + '\')">Resolve SOS</button>';
+              popupContent += '<br/><button class="resolve-btn" onclick="resolveSOS('" + r.id + "')">Resolve SOS</button>';
             }
             
             marker.bindPopup(popupContent);
@@ -112,20 +128,6 @@ export default function MonitorScreen() {
     } catch (e) {
       console.error(e);
     }
-  };
-  return () => { unsubInc(); unsubRangers(); };
-  }, []);
-
-  const handleBroadcastSMS = (alertId: string, zoneName: string) => {
-    setBroadcastingIds(prev => ({...prev, [alertId]: true}));
-    setTimeout(() => {
-      setBroadcastingIds(prev => ({...prev, [alertId]: false}));
-      setBroadcastedIds(prev => ({...prev, [alertId]: true}));
-      Alert.alert(
-        "Twilio Gateway Success", 
-        "\u2705 Broadcast complete!\n\nWarning SMS successfully sent to registered villagers in " + zoneName + " zone."
-      );
-    }, 2000);
   };
 
   return (
@@ -173,13 +175,26 @@ export default function MonitorScreen() {
         </View>
 
         {activeTab === 'rangers' ? (
-          <View style={[styles.stateCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]}>
-            <View style={styles.stateIcon}>
-              <Ionicons name="people-outline" size={25} color={COLORS.slate} />
+          <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
+              <WebView 
+                originWhitelist={['*']}
+                source={{ html: rangersMapHtml }}
+                onMessage={handleWebViewMessage}
+                style={{ flex: 1 }}
+                scrollEnabled={false}
+              />
             </View>
-            <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>Ranger Tracking</Text>
-            <Text style={styles.stateText}>Live ranger tracking map will appear here.</Text>
-          </View>
+            {rangers.filter(r => r.isSOS).length > 0 && (
+              <View style={[styles.stateCard, { backgroundColor: '#FFEBEE', borderColor: '#FFCDD2', borderWidth: 1, marginTop: 10 }]}>
+                <Ionicons name="warning" size={30} color="#D32F2F" />
+                <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16, marginTop: 10}}>
+                  {rangers.filter(r => r.isSOS).length} Ranger(s) need immediate assistance!
+                </Text>
+                <Text style={{color: '#C62828', textAlign: 'center', marginTop: 5}}>
+                  Click the red blinking marker on the map to resolve.
+                </Text>
+              </View>
+            )}
         ) : (
           <View style={{ paddingBottom: 30 }}>
             
