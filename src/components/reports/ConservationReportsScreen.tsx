@@ -6,7 +6,7 @@ import {
   Share,
   StyleSheet,
   Text,
-  TextInput,
+  TextInput, Image,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -24,6 +24,7 @@ import {
   ReportProgressStage,
 } from '../../services/reportService';
 
+const bannerImage = require('../../assets/banner.jpg');
 const COLORS = {
   primary: '#1565C0',
   darkBlue: '#0D47A1',
@@ -362,17 +363,22 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}><Ionicons name="analytics-outline" size={23} color={COLORS.white} /></View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
-            <Text style={styles.headerTitle}>Conservation reports</Text>
-            <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
+        <View style={styles.bannerContainer}>
+            <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+            <View style={styles.bannerOverlay}>
+              <View style={styles.headerIcon}>
+                <Ionicons name="analytics-outline" size={26} color={COLORS.white} />
+              </View>
+              <View style={styles.headerCopy}>
+                <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
+                <Text style={styles.headerTitle}>Conservation reports</Text>
+                <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
+              </View>
+            </View>
           </View>
-        </View>
 
         {viewState !== 'results' && viewState !== 'empty' && (
-          <View style={styles.filterSection}>
+          <View style={[styles.filterSection, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
             <Text style={[styles.fieldLabel, { color: theme.textPrimary }]}>Report type</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.typeOptions}>
               {REPORT_OPTIONS.map((option) => {
@@ -523,6 +529,11 @@ function SourceAvailability({ report, theme }: { report: ConservationReport; the
 }
 
 const styles = StyleSheet.create({
+
+    bannerContainer: { width: '100%', height: 160, borderRadius: 16, overflow: 'hidden', marginBottom: 20, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
+    bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+    bannerOverlay: { flex: 1, backgroundColor: 'rgba(13, 71, 161, 0.75)', padding: 18, flexDirection: 'row', alignItems: 'center' },
+
   sourceList: { marginTop: 10 },
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },

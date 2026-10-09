@@ -1,11 +1,12 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+﻿import { initializeApp, getApps, getApp } from 'firebase/app';
 // @ts-ignore
 import { initializeAuth, getReactNativePersistence, getAuth, Auth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-const cleanEnv = (val?: string) => val ? val.trim().replace(/^["']|["']$/g, '') : '';
+const cleanEnv = (val) => val ? val.trim().replace(/^["']|["']$/g, '') : '';
 
 const firebaseConfig = {
   apiKey: cleanEnv(process.env.EXPO_PUBLIC_FIREBASE_API_KEY),
@@ -16,17 +17,27 @@ const firebaseConfig = {
   appId: cleanEnv(process.env.EXPO_PUBLIC_FIREBASE_APP_ID)
 };
 
-// Handle hot-reloading properly to avoid "already-initialized" errors
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-let auth: Auth;
+let auth;
 try {
-  // Initialize Firebase Auth with AsyncStorage
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
-} catch (error: any) {
-  // If already initialized (e.g., during Fast Refresh), safely get the existing instance
+  if (Platform.OS === 'web') {
+    auth = getAuth(app);
+  } else {
+    let persistenceObj;
+    try {
+      if (typeof getReactNativePersistence !== 'undefined') {
+        persistenceObj = getReactNativePersistence(AsyncStorage);
+      }
+    } catch(e) {}
+    
+    if (persistenceObj) {
+      auth = initializeAuth(app, { persistence: persistenceObj });
+    } else {
+      auth = getAuth(app);
+    }
+  }
+} catch (error) {
   if (error.code === 'auth/already-initialized') {
     auth = getAuth(app);
   } else {

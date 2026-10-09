@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 export interface LatLng {
   lat: number;
@@ -7,17 +7,18 @@ export interface LatLng {
 }
 
 export interface DangerZone {
-  id?: string;
+  id: string;
+  name: string;
   points: LatLng[];
   createdAt: number;
 }
 
 const COLLECTION_NAME = 'danger_zones';
 
-// Fetch all zones (one time)
 export const fetchDangerZones = async (): Promise<DangerZone[]> => {
   try {
-    const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() as Omit<DangerZone, 'id'>)
@@ -28,9 +29,9 @@ export const fetchDangerZones = async (): Promise<DangerZone[]> => {
   }
 };
 
-// Listen to zones in real time
 export const subscribeToDangerZones = (callback: (zones: DangerZone[]) => void) => {
-  return onSnapshot(collection(db, COLLECTION_NAME), (snapshot) => {
+  const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
     const zones = snapshot.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() as Omit<DangerZone, 'id'>)
@@ -39,25 +40,14 @@ export const subscribeToDangerZones = (callback: (zones: DangerZone[]) => void) 
   });
 };
 
-// Since we sync the whole map, we can just clear and replace for simplicity, 
-// or implement a smart sync. Given typical usage (few zones), clear and replace is fine.
-export const syncDangerZones = async (zones: LatLng[][]): Promise<void> => {
-  try {
-    // 1. Delete all existing zones
-    const existing = await getDocs(collection(db, COLLECTION_NAME));
-    const deletePromises = existing.docs.map(d => deleteDoc(doc(db, COLLECTION_NAME, d.id)));
-    await Promise.all(deletePromises);
+export const addDangerZone = async (name: string, points: LatLng[]): Promise<void> => {
+  await addDoc(collection(db, COLLECTION_NAME), {
+    name,
+    points,
+    createdAt: Date.now()
+  });
+};
 
-    // 2. Add new zones
-    const addPromises = zones.map(points => {
-      return addDoc(collection(db, COLLECTION_NAME), {
-        points,
-        createdAt: Date.now()
-      });
-    });
-    await Promise.all(addPromises);
-  } catch (error) {
-    console.error('Error syncing danger zones:', error);
-    throw error;
-  }
+export const deleteDangerZone = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, COLLECTION_NAME, id));
 };
