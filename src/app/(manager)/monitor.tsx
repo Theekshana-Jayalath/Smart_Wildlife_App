@@ -108,8 +108,8 @@ export default function MonitorScreen() {
             // Remove old markers
             window.rangerMarkers.forEach(function(m) { map.removeLayer(m); });
             window.rangerMarkers = [];
-            
-            rangersData.forEach(function(r) {
+            var sosRangers = rangersData.filter(function(r) { return r.isSOS; });
+            sosRangers.forEach(function(r) {
               var iconHtml = '<div class="custom-marker ' + (r.isSOS ? 'sos-marker' : 'normal-marker') + '"></div>';
               var icon = L.divIcon({ html: iconHtml, className: '', iconSize: [24,24], iconAnchor: [12,12] });
               
