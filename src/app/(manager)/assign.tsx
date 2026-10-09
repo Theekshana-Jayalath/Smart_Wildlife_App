@@ -1,15 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../context/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image,  Picker } from '@react-native-picker/picker';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../context/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image,  useEffect, useRef, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../context/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, 
+import { Picker } from '@react-native-picker/picker';
+import { useEffect, useRef, useState } from 'react';
+import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
@@ -17,7 +8,11 @@ import { Image,
   TextInput,
   TouchableOpacity,
   View,
+  Image
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import RoutePickerMap, {
   calculateDistance,
 } from '../../components/patrol/RoutePickerMap';
@@ -25,10 +20,7 @@ import type {
   RangerProfile,
   RoutePoint,
 } from '../../services/patrolService';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../context/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image,  PatrolService } from '../../services/patrolService';
+import { PatrolService } from '../../services/patrolService';
 
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -42,6 +34,7 @@ function isValidDate(value: string): boolean {
 }
 
 const bannerImage = require('../../assets/banner.jpg');
+
 export default function AssignScreen() {
   const { isDarkMode, toggleTheme } = useTheme();
   const [points, setPoints] = useState<RoutePoint[]>([]);
@@ -184,26 +177,32 @@ export default function AssignScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.bannerContainer}>
-        <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
-        <View style={styles.bannerOverlay}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="person-add-outline" size={26} color="#FFFFFF" />
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="person-add-outline" size={26} color="#FFFFFF" />
+            </View>
+            <View style={styles.headerCopy}>
+              <Text style={styles.headerEyebrow}>ROSTER CONTROLS · MANAGER</Text>
+              <Text style={styles.headerTitle}>Assign Patrols</Text>
+              <Text style={styles.headerSubtitle}>Create and dispatch ranger patrols</Text>
+            </View>
+            <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
+              <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>ROSTER CONTROLS · MANAGER</Text>
-            <Text style={styles.headerTitle}>Assign Patrols</Text>
-            <Text style={styles.headerSubtitle}>Create and dispatch ranger patrols</Text>
-          </View>
-          <TouchableOpacity style={styles.darkToggleBtn} onPress={toggleTheme} activeOpacity={0.8}>
-            <Ionicons name={isDarkMode ? "sunny" : "moon"} size={20} color="#FFFFFF" />
-          </TouchableOpacity>
         </View>
-      </View>
-
-      <Text style={styles.title}>Plan a patrol</Text>
-      <Text style={styles.subtitle}>Choose points on the map, then assign a ranger.</Text>
+        
+        <Text style={styles.title}>Plan a patrol</Text>
+        <Text style={styles.subtitle}>
+          Choose points on the map, then assign a ranger.
+        </Text>
 
       <View pointerEvents={loading ? 'none' : 'auto'}>
         <RoutePickerMap
