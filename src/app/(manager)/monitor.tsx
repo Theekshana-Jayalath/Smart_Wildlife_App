@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
-import { IncidentAlert, subscribeToIncidents } from '../../services/incidentService';
+import { IncidentService, RangerIncident } from '../../services/incidentService';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { RangerLocation, subscribeToRangers, resolveRangerSOS } from '../../services/rangerService';
 
@@ -29,12 +29,12 @@ export default function MonitorScreen() {
   const [broadcastedIds, setBroadcastedIds] = React.useState<Record<string, boolean>>({});
   const router = useRouter();
   const { theme, isDarkMode, toggleTheme } = useTheme();
-  const [incidents, setIncidents] = React.useState<IncidentAlert[]>([]);
+  const [incidents, setIncidents] = React.useState<(RangerIncident & { rangerName?: string; rawData: any })[]>([]);
   const [rangers, setRangers] = React.useState<RangerLocation[]>([]);
   const webViewRef = React.useRef<WebView>(null);
   
   React.useEffect(() => {
-    const unsubInc = subscribeToIncidents(setIncidents);
+    const unsubInc = IncidentService.subscribeToAllIncidents(setIncidents);
     const unsubRangers = subscribeToRangers(setRangers);
       return () => { unsubInc(); unsubRangers(); };
   }, []);
@@ -219,11 +219,11 @@ export default function MonitorScreen() {
               <View key={alert.id} style={[styles.sectionCard, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderLeftColor: COLORS.red, borderLeftWidth: 4 }]}>
                 <View style={styles.alertHeader}>
                   <Ionicons name="warning" size={20} color={COLORS.red} />
-                  <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {alert.species.toUpperCase()}</Text>
+                  <Text style={[styles.cardTitle, { color: COLORS.red, marginLeft: 8 }]}>SYSTEM WARNING: {((alert as any).rawData?.species || alert.incidentType || 'UNKNOWN').toUpperCase()}</Text>
                 </View>
-                <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{alert.animalName} breached {alert.zoneName}!</Text>
+                <Text style={[styles.alertDesc, { color: theme.textPrimary }]}>{((alert as any).rawData?.animalName || alert.incidentType || 'Animal')} breached {((alert as any).rawData?.zoneName || 'the zone')}!</Text>
                 
-                <Text style={styles.alertTime}>{alert.time}</Text>
+                <Text style={styles.alertTime}>{new Date(alert.createdAt).toLocaleTimeString()}</Text>
 
                 <View style={styles.actionRow}>
                   <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(manager)/assign')}>
@@ -231,7 +231,7 @@ export default function MonitorScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity 
                       style={[styles.btnSecondary, broadcastedIds[alert.id] && { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' }]} 
-                      onPress={() => handleBroadcastSMS(alert.id, alert.zoneName)} 
+                      onPress={() => handleBroadcastSMS(alert.id, ((alert as any).rawData?.zoneName || 'the zone'))} 
                       disabled={broadcastingIds[alert.id] || broadcastedIds[alert.id]}
                     >
                       {broadcastingIds[alert.id] ? (
