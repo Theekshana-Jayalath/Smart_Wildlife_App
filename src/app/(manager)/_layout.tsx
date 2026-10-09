@@ -1,35 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, router } from 'expo-router';
-import { signOut } from 'firebase/auth';
-import { Alert, Text, TouchableOpacity } from 'react-native';
+import { Tabs } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
-import { auth } from '../../services/firebase';
 
 export default function TabLayout() {
   const { theme } = useTheme();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setTimeout(() => router.replace('/login'), 100);
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    }
-  };
-
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: theme.header },
+        headerShown: false,
         headerTintColor: '#FFFFFF',
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E3F2FD' },
-        headerRight: () => (
-          <TouchableOpacity onPress={handleLogout} style={{ marginRight: 15 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>Logout</Text>
-          </TouchableOpacity>
-        )
       }}>
       <Tabs.Screen
         name="index"

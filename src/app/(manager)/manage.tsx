@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../services/firebase';
 
 // Exact matching colors from Reports UI
 const COLORS = {
@@ -20,6 +22,15 @@ const COLORS = {
 export default function ManageScreen() {
   const router = useRouter();
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setTimeout(() => router.replace('/login'), 100);
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -30,7 +41,7 @@ export default function ManageScreen() {
             <Ionicons name="settings-outline" size={23} color={COLORS.white} />
           </View>
           <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>SYSTEM CONTROLS · MANAGER</Text>
+            <Text style={styles.headerEyebrow}>SYSTEM CONTROLS Â· MANAGER</Text>
             <Text style={styles.headerTitle}>Park Management</Text>
             <Text style={styles.headerSubtitle}>Configure resources and boundaries</Text>
           </View>
@@ -87,6 +98,26 @@ export default function ManageScreen() {
             <Text style={styles.menuDesc}>Add new personnel, roles, and assign patrol sectors</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.slate} />
+        </TouchableOpacity>
+
+        {/* Account Settings Section */}
+        <View style={[styles.resultHeading, { marginTop: 15 }]}>
+          <Text style={styles.resultTitle}>Account</Text>
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.menuCard, { borderColor: '#FFCDD2', backgroundColor: '#FFEBEE' }]} 
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.iconBox, { backgroundColor: COLORS.red }]}>
+            <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, { color: COLORS.red }]}>Log Out</Text>
+            <Text style={styles.menuDesc}>Sign out from your Manager account</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.red} />
         </TouchableOpacity>
 
       </ScrollView>
