@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Platform,
   ScrollView,
   Share,
@@ -25,6 +26,9 @@ import {
   ReportProgressStage,
 } from '../../services/reportService';
 import { IncidentReportsTab } from './IncidentReportsTab';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bannerImage = require('../../assets/banner.jpg');
 
 const COLORS = {
   primary: '#1565C0',
@@ -344,6 +348,24 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   const [fieldError, setFieldError] = useState('');
   const [progress, setProgress] = useState<ReportProgressStage | null>(null);
 
+  function applyPreset(preset: 'thisMonth' | 'last30' | 'last3months' | 'allTime') {
+    const now = new Date();
+    let from: Date;
+    const to = now;
+    if (preset === 'thisMonth') {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (preset === 'last30') {
+      from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    } else if (preset === 'last3months') {
+      from = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    } else {
+      from = new Date(2025, 0, 1);
+    }
+    setFromValue(localDateValue(from));
+    setToValue(localDateValue(to));
+    setFieldError('');
+  }
+
   function getRange(): ReportDateRange | null {
     const startDate = parseDateValue(fromValue.trim(), false);
     const endDate = parseDateValue(toValue.trim(), true);
@@ -408,12 +430,17 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}><Ionicons name="analytics-outline" size={23} color={COLORS.white} /></View>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
-            <Text style={styles.headerTitle}>Conservation reports</Text>
-            <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
+        <View style={styles.bannerContainer}>
+          <Image source={bannerImage} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerOverlay}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="analytics-outline" size={26} color={COLORS.white} />
+            </View>
+            <View style={styles.headerCopy}>
+              <Text style={styles.headerEyebrow}>PARK INTELLIGENCE · {audience.toUpperCase()}</Text>
+              <Text style={styles.headerTitle}>Conservation reports</Text>
+              <Text style={styles.headerSubtitle}>Select analysis and reporting period</Text>
+            </View>
           </View>
         </View>
 
@@ -467,6 +494,40 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
             <Text style={[styles.fieldHint, { color: theme.textSecondary }]}>{REPORT_DEFINITIONS[kind].description}</Text>
 
             <Text style={[styles.fieldLabel, styles.dateLabel, { color: theme.textPrimary }]}>Reporting period</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetRow}>
+              <TouchableOpacity
+                style={styles.presetPill}
+                onPress={() => applyPreset('thisMonth')}
+                disabled={viewState === 'loading'}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.presetPillText}>This Month</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetPill}
+                onPress={() => applyPreset('last30')}
+                disabled={viewState === 'loading'}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.presetPillText}>Last 30 Days</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetPill}
+                onPress={() => applyPreset('last3months')}
+                disabled={viewState === 'loading'}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.presetPillText}>Last 3 Months</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetPill}
+                onPress={() => applyPreset('allTime')}
+                disabled={viewState === 'loading'}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.presetPillText}>All Time (2025+)</Text>
+              </TouchableOpacity>
+            </ScrollView>
             <View style={styles.dateRow}>
               <View style={styles.dateField}>
                 <Text style={[styles.dateCaption, { color: theme.textSecondary }]}>FROM</Text>
@@ -559,9 +620,23 @@ export function ConservationReportsScreen({ audience }: { audience: 'Park manage
             <Text style={[styles.stateTitle, { color: theme.textPrimary }]}>No relevant data found</Text>
             <Text style={[styles.stateText, { color: theme.textSecondary }]}>No connected conservation data exists for this report period.</Text>
             {report && <SourceAvailability report={report} theme={theme} />}
-            <TouchableOpacity accessibilityRole="button" onPress={() => setViewState('idle')} style={styles.retryButton} activeOpacity={0.8}>
-              <Text style={styles.retryText}>Back to report options</Text>
-            </TouchableOpacity>
+            <View style={styles.emptyActions}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => {
+                  applyPreset('allTime');
+                  setViewState('idle');
+                }}
+                style={styles.tryAllTimeButton}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="calendar-outline" size={17} color={COLORS.white} />
+                <Text style={styles.tryAllTimeText}>Try All Time (2025+)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity accessibilityRole="button" onPress={() => setViewState('idle')} style={styles.retryButton} activeOpacity={0.8}>
+                <Text style={styles.retryText}>Back to report options</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -598,7 +673,26 @@ function SourceAvailability({ report, theme }: { report: ConservationReport; the
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
-  header: { backgroundColor: COLORS.darkBlue, borderRadius: 8, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  bannerContainer: {
+    width: '100%',
+    height: 150,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 18,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+  },
+  bannerImage: { width: '100%', height: '100%', position: 'absolute' },
+  bannerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(13, 71, 161, 0.78)',
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center', marginRight: 13 },
   headerCopy: { flex: 1 },
   headerEyebrow: { color: '#BBDEFB', fontSize: 9, fontWeight: '700' },
@@ -618,6 +712,16 @@ const styles = StyleSheet.create({
   typeOptionTextSelected: { color: COLORS.white },
   fieldHint: { fontSize: 11, marginTop: 8, lineHeight: 16 },
   dateLabel: { marginTop: 18 },
+  presetRow: { gap: 8, paddingBottom: 10 },
+  presetPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.lightBlue,
+  },
+  presetPillText: { fontSize: 11, fontWeight: '700', color: COLORS.darkBlue },
   dateRow: { flexDirection: 'row', gap: 10 },
   dateField: { flex: 1, minHeight: 70, borderWidth: 1, borderColor: COLORS.border, borderRadius: 6, paddingHorizontal: 11, paddingTop: 8 },
   dateCaption: { fontSize: 9, fontWeight: '700' },
@@ -641,6 +745,18 @@ const styles = StyleSheet.create({
   errorIcon: { backgroundColor: '#FDECEC' },
   retryButton: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 14, marginTop: 13, borderRadius: 6, backgroundColor: COLORS.lightBlue },
   retryText: { color: COLORS.darkBlue, fontSize: 12, fontWeight: '700' },
+  emptyActions: { width: '100%', gap: 8, marginTop: 14 },
+  tryAllTimeButton: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    backgroundColor: COLORS.primary,
+  },
+  tryAllTimeText: { color: COLORS.white, fontSize: 12, fontWeight: '700' },
   results: { gap: 12 },
   resultHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 },
   resultHeadingText: { flex: 1, marginRight: 8 },
