@@ -16,7 +16,7 @@ import {
   ConservationReport,
   REPORT_DEFINITIONS,
   ReportKind,
-  ReportSource,
+  ReportSource, SourceResult,
 } from '../../services/reportAnalytics';
 import {
   generateConservationReport,
@@ -125,7 +125,7 @@ function TrendChart({ report, textColor }: { report: ConservationReport; textCol
   );
 }
 
-function SourceStateRow({ source, label, theme }: { source: ReportSource; label: string; theme: ReturnType<typeof useTheme>['theme'] }) {
+function SourceStateRow({ source, label, theme }: { source: SourceResult<any>; label: string; theme: ReturnType<typeof useTheme>['theme'] }) {
   const state = source.state;
   const color = state === 'available' ? COLORS.green : state === 'empty' ? COLORS.yellow : COLORS.slate;
   const icon = state === 'available' ? 'checkmark-circle-outline' : state === 'empty' ? 'alert-circle-outline' : 'remove-circle-outline';
