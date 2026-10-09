@@ -107,15 +107,6 @@ export default function TrackingScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: '#F5F8FB' }]} edges={['top']}>
       
-      {/* Exact Header matching Wireframe 1 */}
-      <View style={styles.header}>
-        <Ionicons name="menu" size={26} color="#fff" />
-        <Text style={styles.headerTitle}>Animal Tracking & Alerts</Text>
-        <Ionicons name="notifications" size={24} color="#fff" />
-        {/* Red notification dot */}
-        <View style={styles.notificationDot} />
-      </View>
-
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* Search Bar & Filters */}
