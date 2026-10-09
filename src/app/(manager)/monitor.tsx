@@ -175,7 +175,8 @@ export default function MonitorScreen() {
         </View>
 
         {activeTab === 'rangers' ? (
-          <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
+                      <View>
+  <View style={{ height: 400, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 20 }}>
               <WebView 
                 originWhitelist={['*']}
                 source={{ html: rangersMapHtml }}
@@ -195,6 +196,7 @@ export default function MonitorScreen() {
                 </Text>
               </View>
             )}
+            </View>
         ) : (
           <View style={{ paddingBottom: 30 }}>
             
