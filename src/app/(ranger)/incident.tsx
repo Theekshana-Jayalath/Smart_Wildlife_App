@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button';
 import { useCamera } from '../../hooks/useCamera';
 import { useDeviceLocation } from '../../hooks/useDeviceLocation';
 import { useTheme } from '../../context/ThemeContext';
+import { validateIncidentForm } from '../../utils/incidentValidation';
 
 export default function ReportIncidentScreen() {
   const [type, setType] = useState<IncidentType | null>(null);
@@ -23,7 +24,8 @@ export default function ReportIncidentScreen() {
   const { fetchLocation, loading: locationLoading, error: locationError } = useDeviceLocation();
 
   // Validation
-  const isValid = type !== null && description.trim().length > 0 && location !== null;
+  const validationResult = validateIncidentForm({ type, description, location, photoUri });
+  const isValid = validationResult.isValid;
 
   const handleTakePhoto = async () => {
     const uri = await takePhoto();
