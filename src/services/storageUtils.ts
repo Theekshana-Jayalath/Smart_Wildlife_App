@@ -17,13 +17,17 @@ export async function uploadImageToStorage(uri: string, path: string): Promise<s
 
   let uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(path)}`;
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'image/jpeg',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     let response = await FileSystem.uploadAsync(uploadUrl, uri, {
       httpMethod: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'image/jpeg',
-      },
+      headers,
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
     });
 
@@ -40,10 +44,7 @@ export async function uploadImageToStorage(uri: string, path: string): Promise<s
       
       response = await FileSystem.uploadAsync(altUploadUrl, uri, {
         httpMethod: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'image/jpeg',
-        },
+        headers,
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       });
 
