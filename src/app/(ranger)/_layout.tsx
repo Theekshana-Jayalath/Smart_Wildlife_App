@@ -1,8 +1,10 @@
 import { Tabs, router } from 'expo-router';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, Alert } from 'react-native';
 import { AppTheme } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { auth } from '../../services/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function TabLayout() {
   const { isDarkMode, theme } = useTheme();
@@ -46,7 +48,18 @@ export default function TabLayout() {
         name="profile" 
         options={{ 
           title: 'Profile',
-          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
+          headerRight: () => (
+            <TouchableOpacity 
+              onPress={async () => {
+                await signOut(auth);
+                router.replace('/');
+              }} 
+              style={{ marginRight: 15 }}
+            >
+              <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>Logout</Text>
+            </TouchableOpacity>
+          )
         }} 
       />
       <Tabs.Screen 

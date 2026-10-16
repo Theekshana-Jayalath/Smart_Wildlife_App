@@ -5,22 +5,43 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTheme } from '../../theme';
 import { auth } from '../../services/firebase';
+import { signOut } from 'firebase/auth';
 import { useTheme } from '../../context/ThemeContext';
+import { IncidentService } from '../../services/incidentService';
+import { IncidentRecord } from '../../types/incident';
 
 const bannerImage = require('../../assets/banner.jpg');
 
 export default function RangerDashboard() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('Ranger');
+  const [recentIncidents, setRecentIncidents] = useState<IncidentRecord[]>([]);
+  const [loadingIncidents, setLoadingIncidents] = useState<boolean>(true);
   const { isDarkMode, toggleTheme, theme } = useTheme();
 
   useFocusEffect(
     useCallback(() => {
       const user = auth.currentUser;
-      if (user) {
-        setPhotoUrl(user.photoURL);
-        setDisplayName(user.displayName || 'Ranger');
+      if (!user) {
+        setLoadingIncidents(false);
+        return;
       }
+
+      setPhotoUrl(user.photoURL);
+      setDisplayName(user.displayName || 'Ranger');
+      setLoadingIncidents(true);
+
+      // 1. First fetch directly
+      IncidentService.getIncidentsByRanger(user.uid)
+        .then((list) => {
+          setRecentIncidents(list);
+        })
+        .catch((err) => {
+          console.error("Error loading ranger incidents:", err);
+        })
+        .finally(() => {
+          setLoadingIncidents(false);
+        });
     }, [])
   );
 
@@ -47,18 +68,36 @@ export default function RangerDashboard() {
                 </View>
               </View>
 
-              {/* Dark Mode Toggle Button */}
-              <TouchableOpacity 
-                style={styles.darkToggleBtn} 
-                onPress={toggleTheme}
-                activeOpacity={0.8}
-              >
-                <Ionicons 
-                  name={isDarkMode ? "sunny" : "moon"} 
-                  size={20} 
-                  color="#FFFFFF" 
-                />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {/* Dark Mode Toggle Button */}
+                <TouchableOpacity 
+                  style={styles.darkToggleBtn} 
+                  onPress={toggleTheme}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons 
+                    name={isDarkMode ? "sunny" : "moon"} 
+                    size={20} 
+                    color="#FFFFFF" 
+                  />
+                </TouchableOpacity>
+
+                {/* Logout Button */}
+                <TouchableOpacity 
+                  style={styles.darkToggleBtn} 
+                  onPress={async () => {
+                    await signOut(auth);
+                    router.replace('/');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons 
+                    name="log-out-outline" 
+                    size={20} 
+                    color="#FFFFFF" 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -129,16 +168,67 @@ export default function RangerDashboard() {
               </TouchableOpacity>
             </View>
 
-            {/* Empty State Box */}
-            <View style={[styles.emptyCard, { backgroundColor: theme.emptyCardBg, borderColor: isDarkMode ? '#334155' : '#B0BEC5' }]}>
-              <View style={[styles.emptyIconBg, { backgroundColor: isDarkMode ? '#334155' : '#E3F2FD' }]}>
-                <Ionicons name="document-text-outline" size={32} color={isDarkMode ? '#94A3B8' : '#546E7A'} />
+            {/* Recent Incidents List or Empty State */}
+            {recentIncidents.length > 0 ? (
+              <View style={styles.recentCardsList}>
+                {recentIncidents.slice(0, 3).map((item) => (
+                  <View 
+                    key={item.id} 
+                    style={[styles.incidentCard, { backgroundColor: theme.cardBg, borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}
+                  >
+                    <View style={styles.incidentCardHeader}>
+                      <View style={styles.incidentTypeBadge}>
+                        <Ionicons name="alert-circle" size={14} color={theme.primary} />
+                        <Text style={[styles.incidentTypeBadgeText, { color: theme.primary }]}>
+                          {item.incidentType?.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={[
+                        styles.incidentStatusPill, 
+                        { backgroundColor: item.status === 'RESOLVED' ? '#DCFCE7' : item.status === 'ACTION_TAKEN' ? '#EDE9FE' : '#FEF3C7' }
+                      ]}>
+                        <Text style={[
+                          styles.incidentStatusPillText,
+                          { color: item.status === 'RESOLVED' ? '#15803D' : item.status === 'ACTION_TAKEN' ? '#6D28D9' : '#B45309' }
+                        ]}>
+                          {item.status || 'SUBMITTED'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Text style={[styles.incidentCardDesc, { color: theme.textPrimary }]} numberOfLines={2}>
+                      {item.description}
+                    </Text>
+
+                    <View style={styles.incidentCardFooter}>
+                      <View style={styles.incidentCoordGroup}>
+                        <Ionicons name="location-outline" size={13} color={theme.textSecondary} />
+                        <Text style={[styles.incidentCoordText, { color: theme.textSecondary }]}>
+                          {Number(item.latitude).toFixed(3)}, {Number(item.longitude).toFixed(3)}
+                        </Text>
+                      </View>
+                      {item.photoUrl && (
+                        <View style={styles.hasPhotoTag}>
+                          <Ionicons name="image-outline" size={12} color="#059669" />
+                          <Text style={styles.hasPhotoText}>Photo attached</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))}
               </View>
-              <Text style={[styles.emptyStateTitle, { color: theme.textPrimary }]}>No incidents reported yet</Text>
-              <Text style={[styles.emptyStateSubtitle, { color: theme.textSecondary }]}>
-                Once you report an incident, it will appear here for easy tracking and management.
-              </Text>
-            </View>
+            ) : (
+              /* Empty State Box */
+              <View style={[styles.emptyCard, { backgroundColor: theme.emptyCardBg, borderColor: isDarkMode ? '#334155' : '#B0BEC5' }]}>
+                <View style={[styles.emptyIconBg, { backgroundColor: isDarkMode ? '#334155' : '#E3F2FD' }]}>
+                  <Ionicons name="document-text-outline" size={32} color={isDarkMode ? '#94A3B8' : '#546E7A'} />
+                </View>
+                <Text style={[styles.emptyStateTitle, { color: theme.textPrimary }]}>No incidents reported yet</Text>
+                <Text style={[styles.emptyStateSubtitle, { color: theme.textSecondary }]}>
+                  Once you report an incident, it will appear here for easy tracking and management.
+                </Text>
+              </View>
+            )}
           </View>
 
         </View>
@@ -358,5 +448,70 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     textAlign: 'center',
     lineHeight: 17,
+  },
+  recentCardsList: {
+    gap: 10,
+  },
+  incidentCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  incidentCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  incidentTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  incidentTypeBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  incidentStatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  incidentStatusPillText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  incidentCardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  incidentCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  incidentCoordGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  incidentCoordText: {
+    fontSize: 11.5,
+  },
+  hasPhotoTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  hasPhotoText: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '600',
   },
 });
